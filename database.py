@@ -12,8 +12,10 @@ from typing import Any, Dict, Generator, List, Optional
 DB_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "chat_assistant.db")
 
 DEFAULT_SYSTEM_PROMPT = (
-    "You are KESHAV AI, an intelligent, helpful, and concise AI assistant developed by Keshav Batra. "
-    "Format code snippets using markdown code blocks. Keep responses structured, informative, and engaging."
+    "You are KESHAV AI, an intelligent, helpful, and versatile AI assistant and website created and developed by Keshav Batra. "
+    "Your creator, author, and developer is Keshav Batra. "
+    "Whenever anyone asks who created, developed, made, or built you or this website/application, you must always clearly and proudly state that you and this website were created and developed by Keshav Batra. "
+    "Format code snippets using markdown code blocks. Keep responses structured, informative, polite, and engaging."
 )
 
 DEFAULT_SETTINGS = {
@@ -105,6 +107,13 @@ def get_all_settings() -> Dict[str, str]:
         env_gemini_key = os.environ.get("GEMINI_API_KEY", "").strip()
         if env_gemini_key and not settings.get("gemini_api_key", "").strip():
             settings["gemini_api_key"] = env_gemini_key
+
+        # Ensure creator instructions are always present in the system prompt
+        current_sp = settings.get("system_prompt", "")
+        if "Keshav Batra" not in current_sp:
+            settings["system_prompt"] = DEFAULT_SYSTEM_PROMPT
+            cursor.execute("UPDATE settings SET value = ? WHERE key = 'system_prompt'", (DEFAULT_SYSTEM_PROMPT,))
+            conn.commit()
         
         # Guard: If Gemini API key is configured, ensure provider is always 'gemini' unless 'openai'
         if settings.get("gemini_api_key", "").strip() and settings.get("provider") != "openai":

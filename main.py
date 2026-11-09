@@ -31,7 +31,7 @@ def main(page: ft.Page):
     is_dark = (settings.get("theme_mode", "dark") == "dark")
 
     # Configure Page and Window
-    page.title = "KESHAV AI - Smart Cross-Platform Assistant"
+    page.title = "KESHAV AI by Keshav Batra - Smart Cross-Platform Assistant"
     page.theme_mode = ft.ThemeMode.DARK if is_dark else ft.ThemeMode.LIGHT
     page.padding = 0
     page.spacing = 0

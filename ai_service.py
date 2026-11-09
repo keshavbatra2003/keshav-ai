@@ -73,6 +73,13 @@ class MockAIEngine:
                 "Which phase or feature would you like to prioritize next?"
             )
 
+        # Creator / Developer inquiry
+        if any(w in last_msg for w in ["who made", "who created", "who developed", "who built", "your creator", "developer", "who is keshav"]):
+            return (
+                "👋 **I am KESHAV AI, created and developed by Keshav Batra!**\n\n"
+                "I am a versatile, cross-platform AI assistant designed to run seamlessly on iPhones, Android phones, laptops, and PCs."
+            )
+
         # Greetings
         if any(w in last_msg for w in ["hi", "hello", "hey", "greetings", "good morning", "good evening"]):
             return (
