@@ -14,7 +14,7 @@
             --card-border: rgba(255, 255, 255, 0.08);
             --primary: #6366f1;
             --primary-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
-            --primary-glow: rgba(99, 102, 241, 0.35);
+            --primary-glow: rgba(99, 102, 241, 0.4);
             --text-main: #f8fafc;
             --text-sub: #94a3b8;
             --danger: #ef4444;
@@ -42,15 +42,15 @@
 
         .container {
             width: 100%;
-            max-width: 580px;
+            max-width: 540px;
             background: var(--card-bg);
             border: 1px solid var(--card-border);
             border-radius: 24px;
-            padding: 28px 24px;
+            padding: 24px 20px;
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5), 0 0 80px rgba(99, 102, 241, 0.08);
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 16px;
         }
 
         .header {
@@ -62,11 +62,11 @@
         .header-title-box {
             display: flex;
             flex-direction: column;
-            gap: 4px;
+            gap: 3px;
         }
 
         .header h1 {
-            font-size: 20px;
+            font-size: 19px;
             font-weight: 700;
             display: flex;
             align-items: center;
@@ -85,9 +85,9 @@
             background: rgba(255, 255, 255, 0.06);
             border: 1px solid var(--card-border);
             color: var(--text-main);
-            padding: 8px 14px;
+            padding: 7px 12px;
             border-radius: 12px;
-            font-size: 13px;
+            font-size: 12.5px;
             cursor: pointer;
             text-decoration: none;
             transition: all 0.2s ease;
@@ -100,13 +100,14 @@
             background: rgba(255, 255, 255, 0.12);
         }
 
+        /* Mic Section */
         .mic-section {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 20px 0;
-            gap: 16px;
+            padding: 12px 0 6px 0;
+            gap: 14px;
         }
 
         .mic-button-wrapper {
@@ -114,12 +115,14 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            width: 110px;
+            height: 110px;
         }
 
         .pulse-ring {
             position: absolute;
-            width: 100px;
-            height: 100px;
+            width: 90px;
+            height: 90px;
             border-radius: 50%;
             background: var(--primary-gradient);
             opacity: 0;
@@ -129,20 +132,20 @@
         }
 
         .pulse-ring.active {
-            animation: pulseWave 1.8s infinite ease-out;
+            animation: pulseWave 1.6s infinite ease-out;
         }
 
         @keyframes pulseWave {
             0% {
-                transform: scale(0.95);
-                opacity: 0.7;
+                transform: scale(0.9);
+                opacity: 0.75;
             }
             50% {
-                transform: scale(1.4);
-                opacity: 0.25;
+                transform: scale(1.35);
+                opacity: 0.3;
             }
             100% {
-                transform: scale(1.75);
+                transform: scale(1.65);
                 opacity: 0;
             }
         }
@@ -150,49 +153,82 @@
         .mic-btn {
             position: relative;
             z-index: 2;
-            width: 82px;
-            height: 82px;
+            width: 78px;
+            height: 78px;
             border-radius: 50%;
             border: none;
             background: var(--primary-gradient);
-            box-shadow: 0 10px 25px var(--primary-glow);
+            box-shadow: 0 8px 24px var(--primary-glow);
             color: #ffffff;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
+            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease, background 0.3s ease;
         }
 
         .mic-btn:hover {
-            transform: scale(1.05);
+            transform: scale(1.06);
         }
 
         .mic-btn:active {
-            transform: scale(0.95);
+            transform: scale(0.94);
         }
 
         .mic-btn.listening {
             background: linear-gradient(135deg, #ef4444 0%, #f43f5e 100%);
-            box-shadow: 0 10px 30px rgba(239, 68, 68, 0.45);
+            box-shadow: 0 8px 28px rgba(239, 68, 68, 0.55);
         }
 
         .mic-btn svg {
-            width: 36px;
-            height: 36px;
+            width: 34px;
+            height: 34px;
             fill: currentColor;
+        }
+
+        /* Equalizer sound bars */
+        .equalizer-bars {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            height: 24px;
+        }
+
+        .equalizer-bars.active {
+            display: flex;
+        }
+
+        .bar {
+            width: 3.5px;
+            height: 8px;
+            background: #ef4444;
+            border-radius: 3px;
+            animation: soundWave 0.8s infinite ease-in-out alternate;
+        }
+
+        .bar:nth-child(1) { animation-delay: 0.1s; height: 10px; }
+        .bar:nth-child(2) { animation-delay: 0.3s; height: 18px; }
+        .bar:nth-child(3) { animation-delay: 0.15s; height: 24px; }
+        .bar:nth-child(4) { animation-delay: 0.4s; height: 16px; }
+        .bar:nth-child(5) { animation-delay: 0.2s; height: 9px; }
+
+        @keyframes soundWave {
+            0% { transform: scaleY(0.4); }
+            100% { transform: scaleY(1.4); }
         }
 
         .status-badge {
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            padding: 6px 14px;
+            padding: 6px 16px;
             border-radius: 20px;
             background: rgba(255, 255, 255, 0.05);
             font-size: 13px;
             color: var(--text-sub);
             font-weight: 500;
+            transition: all 0.2s ease;
         }
 
         .status-badge.listening {
@@ -219,6 +255,7 @@
             to { opacity: 1; }
         }
 
+        /* Transcript area */
         .transcript-wrapper {
             position: relative;
             display: flex;
@@ -236,8 +273,8 @@
 
         .transcript-box {
             width: 100%;
-            min-height: 130px;
-            max-height: 240px;
+            min-height: 120px;
+            max-height: 220px;
             background: rgba(0, 0, 0, 0.35);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 16px;
@@ -263,16 +300,16 @@
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
-            gap: 10px;
+            gap: 8px;
         }
 
         .lang-select {
             background: rgba(255, 255, 255, 0.06);
             border: 1px solid var(--card-border);
             color: var(--text-main);
-            padding: 7px 12px;
+            padding: 6px 11px;
             border-radius: 10px;
-            font-size: 12.5px;
+            font-size: 12px;
             outline: none;
             cursor: pointer;
         }
@@ -296,6 +333,7 @@
             color: var(--danger);
         }
 
+        /* Chips */
         .chips-container {
             display: flex;
             flex-wrap: wrap;
@@ -319,18 +357,19 @@
             border-color: rgba(99, 102, 241, 0.3);
         }
 
+        /* Actions */
         .actions-group {
             display: flex;
             flex-direction: column;
             gap: 10px;
-            margin-top: 4px;
+            margin-top: 2px;
         }
 
         .primary-action-btn {
             background: var(--primary-gradient);
             border: none;
             color: #ffffff;
-            padding: 14px 20px;
+            padding: 13px 20px;
             border-radius: 14px;
             font-size: 15px;
             font-weight: 600;
@@ -364,7 +403,7 @@
             color: var(--text-main);
             padding: 10px 14px;
             border-radius: 12px;
-            font-size: 13px;
+            font-size: 12.5px;
             font-weight: 500;
             cursor: pointer;
             display: flex;
@@ -383,7 +422,7 @@
             color: var(--text-sub);
             text-align: center;
             line-height: 1.5;
-            padding: 8px;
+            padding: 8px 10px;
             border-radius: 10px;
             background: rgba(255, 255, 255, 0.02);
             border: 1px dashed rgba(255, 255, 255, 0.08);
@@ -393,7 +432,6 @@
             text-align: center;
             font-size: 11px;
             color: rgba(148, 163, 184, 0.5);
-            margin-top: 8px;
         }
 
         .not-supported-banner {
@@ -407,14 +445,13 @@
             line-height: 1.5;
         }
 
-        /* Toast notification */
         .toast {
             position: fixed;
             bottom: 24px;
             background: #1e293b;
             color: #ffffff;
             border: 1px solid var(--primary);
-            padding: 10px 18px;
+            padding: 9px 16px;
             border-radius: 10px;
             font-size: 13px;
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
@@ -437,8 +474,8 @@
         <!-- Header -->
         <div class="header">
             <div class="header-title-box">
-                <h1>🎙️ KESHAV AI Dictation</h1>
-                <p>Created & developed by Keshav Batra</p>
+                <h1>🎙️ Voice Dictation</h1>
+                <p>KESHAV AI • Developed by Keshav Batra</p>
             </div>
             <a href="javascript:goBackToChat()" class="back-btn">
                 <span>← Chat</span>
@@ -463,7 +500,16 @@
                 </button>
             </div>
 
-            <div id="statusBadge" class="status-badge">
+            <!-- Sound equalizer animation -->
+            <div id="equalizer" class="equalizer-bars">
+                <div class="bar"></div>
+                <div class="bar"></div>
+                <div class="bar"></div>
+                <div class="bar"></div>
+                <div class="bar"></div>
+            </div>
+
+            <div id="statusBadge" class="status-badge" onclick="toggleRecognition()" style="cursor: pointer;">
                 <span id="statusDot" class="status-dot"></span>
                 <span id="statusText">Tap microphone to speak</span>
             </div>
@@ -472,18 +518,16 @@
         <!-- Transcript Area -->
         <div class="transcript-wrapper">
             <div class="transcript-header">
-                <span>Recognized Speech (editable):</span>
+                <span>Transcribed Speech (editable):</span>
                 <div class="tools-row">
                     <select id="langSelect" class="lang-select" onchange="changeLanguage()">
-                        <option value="en-US" selected>🇺🇸 English (US)</option>
-                        <option value="en-IN">🇮🇳 English (India)</option>
-                        <option value="en-GB">🇬🇧 English (UK)</option>
+                        <option value="en-IN" selected>🇮🇳 English (India)</option>
                         <option value="hi-IN">🇮🇳 हिन्दी (Hindi)</option>
+                        <option value="en-US">🇺🇸 English (US)</option>
+                        <option value="en-GB">🇬🇧 English (UK)</option>
                         <option value="es-ES">🇪🇸 Español (Spanish)</option>
                         <option value="fr-FR">🇫🇷 Français (French)</option>
                         <option value="de-DE">🇩🇪 Deutsch (German)</option>
-                        <option value="ar-SA">🇸🇦 العربية (Arabic)</option>
-                        <option value="zh-CN">🇨🇳 中文 (Mandarin)</option>
                     </select>
                     <button class="clear-btn" onclick="clearTranscript()">Clear</button>
                 </div>
@@ -492,7 +536,7 @@
             <textarea 
                 id="transcriptBox" 
                 class="transcript-box" 
-                placeholder="Speak clearly into your microphone... your words will appear here in real time!"
+                placeholder="Tap the microphone above and speak clearly... words will appear here in real time!"
             ></textarea>
         </div>
 
@@ -500,8 +544,8 @@
         <div class="chips-container">
             <span class="chip" onclick="appendSample('Explain quantum computing in simple bullet points')">💡 Quantum Computing</span>
             <span class="chip" onclick="appendSample('Write a Python FastAPI boilerplate with health check')">💻 Python API</span>
-            <span class="chip" onclick="appendSample('Draft a polite meeting follow-up email')">📝 Follow-up Email</span>
             <span class="chip" onclick="appendSample('/image a futuristic cybernetic tiger in neon rain')">🎨 Generate AI Image</span>
+            <span class="chip" onclick="appendSample('Draft a polite meeting follow-up email')">📝 Follow-up Email</span>
         </div>
 
         <!-- Primary Action Buttons -->
@@ -522,7 +566,7 @@
 
         <!-- Mobile tip -->
         <div class="mobile-tip">
-            📱 <strong>Instant Mobile Dictation:</strong> You can also tap directly in the chat box on your phone and press the 🎙️ mic button on your Apple / Gboard keyboard!
+            📱 <strong>Quick Keyboard Tip:</strong> Inside the chat prompt box, tap your phone's built-in 🎙️ mic key on the keyboard for instant native typing!
         </div>
 
         <div class="footer-cred">
@@ -536,7 +580,8 @@
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         let recognition = null;
         let isListening = false;
-        let finalTranscript = "";
+        let finalAccumulatedText = "";
+        let restartTimer = null;
 
         const micBtn = document.getElementById("micBtn");
         const pulseRing = document.getElementById("pulseRing");
@@ -545,74 +590,105 @@
         const statusText = document.getElementById("statusText");
         const transcriptBox = document.getElementById("transcriptBox");
         const langSelect = document.getElementById("langSelect");
+        const equalizer = document.getElementById("equalizer");
         const unsupportedWarning = document.getElementById("unsupportedWarning");
 
-        // Parse session_id from URL query if present
+        // Parse query params
         const urlParams = new URLSearchParams(window.location.search);
         const currentSessionId = urlParams.get("session_id") || "";
 
-        // Check SpeechRecognition support
+        // Smart locale detection
+        const navLang = navigator.language || "en-IN";
+        if (navLang.startsWith("hi")) {
+            langSelect.value = "hi-IN";
+        } else if (navLang === "en-US") {
+            langSelect.value = "en-US";
+        } else if (navLang === "en-GB") {
+            langSelect.value = "en-GB";
+        } else {
+            langSelect.value = "en-IN"; // Default to en-IN for Indian accent accuracy
+        }
+
+        // Check Web Speech support
         if (!SpeechRecognition) {
             unsupportedWarning.style.display = "block";
             statusText.textContent = "Web Speech not supported in this browser";
         } else {
-            initRecognition();
+            setupRecognition();
         }
 
-        function initRecognition() {
-            recognition = new SpeechRecognition();
-            recognition.continuous = true;
-            recognition.interimResults = true;
-            recognition.lang = langSelect.value;
+        function setupRecognition() {
+            try {
+                recognition = new SpeechRecognition();
+                recognition.continuous = true;
+                recognition.interimResults = true;
+                recognition.lang = langSelect.value;
+                recognition.maxAlternatives = 1;
 
-            recognition.onstart = function() {
-                isListening = true;
-                micBtn.classList.add("listening");
-                pulseRing.classList.add("active");
-                statusBadge.classList.add("listening");
-                statusDot.classList.add("listening");
-                statusText.textContent = "Listening... Speak clearly now";
-            };
+                recognition.onstart = function() {
+                    isListening = true;
+                    micBtn.classList.add("listening");
+                    pulseRing.classList.add("active");
+                    equalizer.classList.add("active");
+                    statusBadge.classList.add("listening");
+                    statusDot.classList.add("listening");
+                    statusText.textContent = "Listening... Speak clearly now";
+                    try { navigator.vibrate?.([30]); } catch(e){}
+                };
 
-            recognition.onresult = function(event) {
-                let interimTranscript = "";
-                for (let i = event.resultIndex; i < event.results.length; ++i) {
-                    if (event.results[i].isFinal) {
-                        finalTranscript += event.results[i][0].transcript + " ";
-                    } else {
-                        interimTranscript += event.results[i][0].transcript;
+                recognition.onresult = function(event) {
+                    let interimText = "";
+                    let finalChunk = "";
+
+                    for (let i = event.resultIndex; i < event.results.length; ++i) {
+                        const transcript = event.results[i][0].transcript;
+                        if (event.results[i].isFinal) {
+                            finalChunk += transcript + " ";
+                        } else {
+                            interimText += transcript;
+                        }
                     }
-                }
-                const display = (finalTranscript + interimTranscript).trim();
-                if (display) {
-                    transcriptBox.value = display;
-                }
-            };
 
-            recognition.onerror = function(event) {
-                console.warn("Speech recognition event:", event.error);
-                if (event.error === "not-allowed" || event.error === "permission-denied") {
-                    statusText.textContent = "Microphone access blocked. Please allow permissions in browser.";
-                    stopRecognition();
-                }
-            };
+                    if (finalChunk) {
+                        finalAccumulatedText += finalChunk;
+                    }
 
-            recognition.onend = function() {
-                if (isListening) {
-                    try {
-                        recognition.start();
-                    } catch (e) {
+                    const fullDisplay = (finalAccumulatedText + interimText).trim();
+                    if (fullDisplay) {
+                        transcriptBox.value = fullDisplay;
+                    }
+                };
+
+                recognition.onerror = function(event) {
+                    console.warn("Speech recognition error:", event.error);
+                    if (event.error === "not-allowed" || event.error === "permission-denied") {
+                        statusText.textContent = "Microphone blocked. Please allow permissions in browser.";
+                        stopRecognition();
+                    } else if (event.error === "network") {
+                        statusText.textContent = "Network issue with speech recognition.";
+                    }
+                };
+
+                recognition.onend = function() {
+                    if (isListening) {
+                        // Smoothly restart after slight pause so Chrome doesn't drop
+                        clearTimeout(restartTimer);
+                        restartTimer = setTimeout(() => {
+                            if (isListening && recognition) {
+                                try {
+                                    recognition.start();
+                                } catch(e) {
+                                    stopRecognition();
+                                }
+                            }
+                        }, 200);
+                    } else {
                         stopRecognition();
                     }
-                } else {
-                    stopRecognition();
-                }
-            };
-
-            // Attempt auto-start on load
-            setTimeout(() => {
-                startRecognition();
-            }, 300);
+                };
+            } catch(e) {
+                console.error("Setup speech recognition error:", e);
+            }
         }
 
         function toggleRecognition() {
@@ -630,15 +706,25 @@
         function startRecognition() {
             if (!recognition) return;
             try {
-                finalTranscript = transcriptBox.value.trim() ? transcriptBox.value.trim() + " " : "";
+                // Keep existing text in buffer so it doesn't overwrite
+                const existing = transcriptBox.value.trim();
+                finalAccumulatedText = existing ? existing + " " : "";
+                isListening = true;
                 recognition.start();
             } catch (e) {
-                // Already started or gesture required
+                // If already running or resetting
+                try {
+                    recognition.stop();
+                    setTimeout(() => {
+                        if (isListening) recognition.start();
+                    }, 250);
+                } catch(err){}
             }
         }
 
         function stopRecognition() {
             isListening = false;
+            clearTimeout(restartTimer);
             if (recognition) {
                 try {
                     recognition.stop();
@@ -646,9 +732,10 @@
             }
             micBtn.classList.remove("listening");
             pulseRing.classList.remove("active");
+            equalizer.classList.remove("active");
             statusBadge.classList.remove("listening");
             statusDot.classList.remove("listening");
-            statusText.textContent = "Paused • Tap mic to resume";
+            statusText.textContent = "Paused • Tap mic to speak";
         }
 
         function changeLanguage() {
@@ -657,14 +744,16 @@
             stopRecognition();
             recognition.lang = langSelect.value;
             if (wasListening) {
-                setTimeout(startRecognition, 200);
+                setTimeout(startRecognition, 300);
             }
+            showToast("Language changed to " + langSelect.options[langSelect.selectedIndex].text);
         }
 
         function clearTranscript() {
-            finalTranscript = "";
+            finalAccumulatedText = "";
             transcriptBox.value = "";
             transcriptBox.focus();
+            showToast("Transcript cleared");
         }
 
         function appendSample(sampleText) {
@@ -674,7 +763,7 @@
             } else {
                 transcriptBox.value = sampleText;
             }
-            finalTranscript = transcriptBox.value + " ";
+            finalAccumulatedText = transcriptBox.value + " ";
             showToast("Sample prompt added!");
         }
 

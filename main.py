@@ -254,7 +254,7 @@ def main(page: ft.Page):
         if auto_send:
             async def _do_auto_send():
                 import asyncio
-                await asyncio.sleep(0.35)
+                await asyncio.sleep(0.6)
                 chat_view.send_message()
 
             page.run_task(_do_auto_send)
