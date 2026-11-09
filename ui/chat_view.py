@@ -838,7 +838,10 @@ class ChatView(ft.Container):
 
     def _use_prompt(self, prompt: str):
         self.text_input.value = prompt
-        self.text_input.focus()
+        try:
+            self.app_page.run_task(self.text_input.focus)
+        except Exception:
+            pass
         try:
             self.text_input.update()
         except RuntimeError:
