@@ -1,0 +1,51 @@
+[project]
+name = "keshav-ai"
+version = "1.0.0"
+description = "KESHAV AI - Smart Cross-Platform Assistant for Mac, Windows, and Mobile"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "flet[all]>=1.1.2",
+    "httpx>=0.28.1",
+]
+
+[tool.flet]
+org = "org.keshav.ai"
+product = "KESHAV AI"
+company = "KESHAV AI Labs"
+copyright = "Copyright (C) 2026 KESHAV AI Labs"
+permissions = ["microphone"]
+
+[tool.flet.macos]
+bundle_id = "org.keshav.ai.desktop"
+app_category = "public.app-category.productivity"
+
+[tool.flet.windows]
+company = "KESHAV AI Labs"
+product = "KESHAV AI"
+
+[tool.flet.android]
+package = "org.keshav.ai.assistant"
+version_code = 1
+version_name = "1.0.0"
+permissions = [
+    "android.permission.INTERNET",
+    "android.permission.RECORD_AUDIO",
+    "android.permission.READ_EXTERNAL_STORAGE",
+    "android.permission.WRITE_EXTERNAL_STORAGE"
+]
+
+[tool.flet.ios]
+bundle_id = "org.keshav.ai.assistant"
+build_version = "1.0.0"
+build_number = 1
+permissions = [
+    "microphone"
+]
+
+[tool.flet.web]
+route_url_strategy = "path"
+web_renderer = "auto"
+pwa_theme_color = "#0B0F19"
+pwa_background_color = "#0B0F19"
+pwa_short_name = "KESHAV AI"

@@ -1,0 +1,255 @@
+"""
+Conversation history sidebar and mobile drawer.
+Supports searching sessions, starting new chats, switching sessions, and deleting chats.
+"""
+
+from typing import Callable, List, Optional
+import flet as ft
+import database
+from theme import get_theme_colors
+
+
+class HistorySidebar(ft.Container):
+    def __init__(
+        self,
+        current_session_id: str,
+        is_dark: bool,
+        on_select_session: Callable[[str], None],
+        on_new_chat: Callable[[], None],
+        on_delete_session: Callable[[str], None],
+        on_open_settings: Callable[[], None],
+        client_id: Optional[str] = None,
+        width: int = 280,
+    ):
+        super().__init__()
+        self.current_session_id = current_session_id
+        self.is_dark = is_dark
+        self.on_select_session = on_select_session
+        self.on_new_chat = on_new_chat
+        self.on_delete_session = on_delete_session
+        self.on_open_settings = on_open_settings
+        self.client_id = client_id
+        self.search_query = ""
+
+        self.width = width
+        self.padding = ft.Padding(12, 16, 12, 16)
+        self.update_colors()
+
+        # UI Elements
+        self.search_input = ft.TextField(
+            hint_text="Search conversations...",
+            prefix_icon=ft.Icons.SEARCH_ROUNDED,
+            dense=True,
+            content_padding=ft.Padding(10, 8, 10, 8),
+            border=ft.OutlineInputBorder(
+                border_radius=12,
+                side=ft.BorderSide(1, self.theme["border"]),
+            ),
+            bgcolor=self.theme["input_bg"],
+            color=self.theme["text_primary"],
+            hint_style=ft.TextStyle(size=12.5, color=self.theme["text_muted"]),
+            on_change=self._on_search_change,
+        )
+
+        self.session_list_view = ft.ListView(
+            expand=True,
+            spacing=6,
+            padding=0,
+        )
+
+        self._build_layout()
+        self.refresh_sessions()
+
+    def update_colors(self):
+        self.theme = get_theme_colors(self.is_dark)
+        self.bgcolor = self.theme["surface"]
+        self.border = ft.Border(
+            right=ft.BorderSide(width=1, color=self.theme["border"])
+        )
+
+    def set_dark_mode(self, is_dark: bool):
+        self.is_dark = is_dark
+        self.update_colors()
+        self.search_input.border = ft.OutlineInputBorder(
+            border_radius=12,
+            side=ft.BorderSide(1, self.theme["border"]),
+        )
+        self.search_input.bgcolor = self.theme["input_bg"]
+        self.search_input.color = self.theme["text_primary"]
+        self.search_input.hint_style = ft.TextStyle(size=12.5, color=self.theme["text_muted"])
+        self.refresh_sessions()
+
+    def _build_layout(self):
+        # Header with Logo & Brand
+        brand_row = ft.Row(
+            alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+            controls=[
+                ft.Row(
+                    spacing=8,
+                    vertical_alignment=ft.CrossAxisAlignment.CENTER,
+                    controls=[
+                        ft.Container(
+                            width=32,
+                            height=32,
+                            border_radius=8,
+                            gradient=ft.LinearGradient(
+                                colors=[self.theme["primary_gradient_start"], self.theme["primary_gradient_end"]]
+                            ),
+                            alignment=ft.Alignment(0, 0),
+                            content=ft.Icon(ft.Icons.AUTO_AWESOME_ROUNDED, size=18, color="#FFFFFF"),
+                        ),
+                        ft.Text(
+                            "KESHAV AI",
+                            size=17,
+                            weight=ft.FontWeight.BOLD,
+                            color=self.theme["text_primary"],
+                        ),
+                    ],
+                ),
+                ft.IconButton(
+                    icon=ft.Icons.SETTINGS_OUTLINED,
+                    icon_size=20,
+                    tooltip="Settings",
+                    icon_color=self.theme["text_secondary"],
+                    on_click=lambda _: self.on_open_settings(),
+                ),
+            ],
+        )
+
+        # "+ New Chat" Button
+        new_chat_btn = ft.Container(
+            on_click=lambda _: self.on_new_chat(),
+            padding=ft.Padding(12, 10, 12, 10),
+            border_radius=12,
+            gradient=ft.LinearGradient(
+                colors=[self.theme["primary_gradient_start"], self.theme["primary_gradient_end"]],
+            ),
+            content=ft.Row(
+                alignment=ft.MainAxisAlignment.CENTER,
+                spacing=8,
+                controls=[
+                    ft.Icon(ft.Icons.ADD_ROUNDED, size=18, color="#FFFFFF"),
+                    ft.Text("New Chat", size=13.5, weight=ft.FontWeight.W_600, color="#FFFFFF"),
+                ],
+            ),
+        )
+
+        self.content = ft.Column(
+            expand=True,
+            spacing=14,
+            controls=[
+                brand_row,
+                new_chat_btn,
+                self.search_input,
+                ft.Text(
+                    "CONVERSATIONS",
+                    size=10.5,
+                    weight=ft.FontWeight.BOLD,
+                    color=self.theme["text_muted"],
+                ),
+                self.session_list_view,
+            ],
+        )
+
+    def _on_search_change(self, e):
+        self.search_query = e.control.value.lower().strip()
+        self.refresh_sessions()
+
+    def set_current_session(self, session_id: str):
+        self.current_session_id = session_id
+        self.refresh_sessions()
+
+    def refresh_sessions(self):
+        sessions = database.get_sessions(client_id=self.client_id)
+        self.session_list_view.controls.clear()
+
+        filtered_sessions = [
+            s for s in sessions
+            if not self.search_query or self.search_query in s["title"].lower()
+        ]
+
+        if not filtered_sessions:
+            self.session_list_view.controls.append(
+                ft.Container(
+                    padding=ft.Padding(0, 24, 0, 0),
+                    alignment=ft.Alignment(0, 0),
+                    content=ft.Text(
+                        "No chats found" if self.search_query else "No past chats yet",
+                        size=12,
+                        color=self.theme["text_muted"],
+                        italic=True,
+                    ),
+                )
+            )
+        else:
+            for s in filtered_sessions:
+                is_active = (s["id"] == self.current_session_id)
+                msg_count = s.get("message_count", 0)
+
+                # Format time
+                updated_at = s.get("updated_at", "")
+                date_part = updated_at.split("T")[0] if "T" in updated_at else ""
+
+                item_container = ft.Container(
+                    padding=ft.Padding(10, 8, 8, 8),
+                    border_radius=10,
+                    bgcolor=self.theme["surface_active"] if is_active else "transparent",
+                    border=ft.Border.all(
+                        width=1,
+                        color=self.theme["primary"] if is_active else "transparent",
+                    ),
+                    on_click=lambda _, sid=s["id"]: self.on_select_session(sid),
+                    content=ft.Row(
+                        alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                        vertical_alignment=ft.CrossAxisAlignment.CENTER,
+                        controls=[
+                            ft.Row(
+                                spacing=10,
+                                vertical_alignment=ft.CrossAxisAlignment.CENTER,
+                                expand=True,
+                                controls=[
+                                    ft.Icon(
+                                        ft.Icons.CHAT_BUBBLE_OUTLINE_ROUNDED if not is_active else ft.Icons.CHAT_BUBBLE_ROUNDED,
+                                        size=16,
+                                        color=self.theme["primary"] if is_active else self.theme["text_secondary"],
+                                    ),
+                                    ft.Column(
+                                        spacing=2,
+                                        expand=True,
+                                        controls=[
+                                            ft.Text(
+                                                s["title"],
+                                                size=13,
+                                                weight=ft.FontWeight.W_600 if is_active else ft.FontWeight.W_400,
+                                                color=self.theme["text_primary"],
+                                                max_lines=1,
+                                                overflow=ft.TextOverflow.ELLIPSIS,
+                                            ),
+                                            ft.Text(
+                                                f"{msg_count} msgs • {date_part}",
+                                                size=10.5,
+                                                color=self.theme["text_muted"],
+                                            ),
+                                        ],
+                                    ),
+                                ],
+                            ),
+                            ft.IconButton(
+                                icon=ft.Icons.DELETE_OUTLINE_ROUNDED,
+                                icon_size=16,
+                                icon_color=self.theme["text_muted"],
+                                tooltip="Delete chat",
+                                on_click=lambda _, sid=s["id"]: self._confirm_delete(sid),
+                            ),
+                        ],
+                    ),
+                )
+                self.session_list_view.controls.append(item_container)
+
+        try:
+            self.update()
+        except RuntimeError:
+            pass
+
+    def _confirm_delete(self, session_id: str):
+        self.on_delete_session(session_id)
