@@ -100,6 +100,11 @@ def get_all_settings() -> Dict[str, str]:
         settings = dict(DEFAULT_SETTINGS)
         for row in rows:
             settings[row["key"]] = row["value"]
+
+        # Support GEMINI_API_KEY environment variable (e.g. from Render / Cloud hosting)
+        env_gemini_key = os.environ.get("GEMINI_API_KEY", "").strip()
+        if env_gemini_key and not settings.get("gemini_api_key", "").strip():
+            settings["gemini_api_key"] = env_gemini_key
         
         # Guard: If Gemini API key is configured, ensure provider is always 'gemini' unless 'openai'
         if settings.get("gemini_api_key", "").strip() and settings.get("provider") != "openai":
@@ -113,8 +118,14 @@ def get_setting(key: str, default: Optional[str] = None) -> str:
         cursor = conn.cursor()
         cursor.execute("SELECT value FROM settings WHERE key = ?", (key,))
         row = cursor.fetchone()
-        if row:
+        if row and row["value"]:
             return row["value"]
+
+        if key == "gemini_api_key":
+            env_key = os.environ.get("GEMINI_API_KEY", "").strip()
+            if env_key:
+                return env_key
+
         return default if default is not None else DEFAULT_SETTINGS.get(key, "")
 
 
