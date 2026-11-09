@@ -324,6 +324,10 @@ if __name__ == "__main__":
             with open(dictate_path, "r", encoding="utf-8") as f:
                 return f.read()
 
+        @app.get("/google{code}.html", response_class=PlainTextResponse)
+        async def google_verification_file(code: str):
+            return f"google-site-verification: google{code}.html"
+
         flet_app = flet_fastapi.app(
             main,
             assets_dir="assets",

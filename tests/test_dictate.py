@@ -40,6 +40,10 @@ class TestDictateEndpoint(unittest.TestCase):
   <url><loc>https://keshav-ai.onrender.com/</loc></url>
 </urlset>"""
 
+        @self.app.get("/google{code}.html")
+        async def google_verification_file(code: str):
+            return f"google-site-verification: google{code}.html"
+
         self.client = TestClient(self.app)
 
     def test_robots_and_sitemap(self):
@@ -51,6 +55,10 @@ class TestDictateEndpoint(unittest.TestCase):
         resp_sitemap = self.client.get("/sitemap.xml")
         self.assertEqual(resp_sitemap.status_code, 200)
         self.assertIn("keshav-ai.onrender.com", resp_sitemap.text)
+
+        resp_google = self.client.get("/googleF3DyA0ho9fPeBQxxoh1_-mjpwreKhkHvQuIhBxI5XJw.html")
+        self.assertEqual(resp_google.status_code, 200)
+        self.assertIn("google-site-verification: googleF3DyA0ho9fPeBQxxoh1_-mjpwreKhkHvQuIhBxI5XJw.html", resp_google.text)
 
     def test_dictate_page_renders_html5_speech(self):
         resp = self.client.get("/dictate")
