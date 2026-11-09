@@ -19,8 +19,13 @@ Built with **Python** and **Flet** (Flutter engine for Python).
   - Attach Python scripts, code files, Markdown docs, JSON, CSV, or text files directly via the attachment button (`📎`).
   - File chips show name and size with single-click removal.
   - Context from attached files is automatically formatted into code blocks for AI analysis.
-- **🎙️ Voice Dictation (Speech-to-Text) & 🔊 Narration (Text-to-Speech)**:
-  - **Voice Dictation**: Interactive microphone modal with pulsing audio visualizer and quick speech prompts.
+- **🎨 AI Image Generation (FLUX.1 Engine)**:
+  - Generate photorealistic 1024x1024 AI images in seconds with zero configuration or API keys needed.
+  - Supports natural language (`"generate an image of..."`, `"draw..."`, `"paint..."`), `/image [prompt]`, or clicking the 🎨 Palette button in the prompt box.
+  - Native in-chat image rendering with single-click Full HD download link.
+- **🎙️ Real Voice Dictation (Speech-to-Text) & 🔊 Narration (Text-to-Speech)**:
+  - **Live Web Speech Dictation**: Tap the mic button to open the real HTML5 Web Speech dictation interface (`/dictate`). Speaks into your mic, transcribes words in real-time, supports multiple languages (English US/IN/UK, Hindi, Spanish, etc.), and sends transcribed text straight into chat.
+  - **Mobile Keyboard Dictation**: Seamless support for iOS & Android keyboard microphones.
   - **Read Aloud**: Click the speaker icon on any assistant message to listen to the reply narrated using your system's native voice engine.
 - **Multi-Engine AI Support**:
   - **⚡ Built-in Demo Engine**: Works offline immediately with zero API keys required. Handles code review, brainstorming, problem-solving, and general advice.

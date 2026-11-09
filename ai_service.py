@@ -8,8 +8,57 @@ AI Service layer providing integration and real-time token streaming with:
 import asyncio
 import json
 import random
+import re
+import urllib.parse
 from typing import Any, AsyncGenerator, Dict, List, Optional
 import httpx
+
+IMAGE_PREFIX_PATTERNS = [
+    r"^\s*/(?:image|imagine|draw|paint|img|generate-image)\b\s*",
+    r"^\s*(?:can you |could you |please )?(?:generate|create|make|render|produce)\s+(?:an?|the)?\s*(?:ai\s+)?(?:image|picture|photo|illustration|drawing|artwork)\s+of\b\s*",
+    r"^\s*(?:can you |could you |please )?(?:draw|paint)\s+(?:an?|the)?\s*(?:picture|image|illustration)\s+of\b\s*",
+    r"^\s*(?:can you |could you |please )?(?:draw|paint)\s+(?:me\s+)?",
+    r"^\s*(?:imagine|show me an image of|show me a picture of)\b\s*",
+]
+
+
+def is_image_request(text: str) -> bool:
+    """Detects whether user prompt is asking to generate/draw an image."""
+    if not text:
+        return False
+    t = text.strip()
+    return any(re.search(pat, t, re.IGNORECASE) for pat in IMAGE_PREFIX_PATTERNS)
+
+
+def extract_image_prompt(text: str) -> str:
+    """Extracts the visual subject/description from an image generation request."""
+    cleaned = text.strip()
+    for pat in IMAGE_PREFIX_PATTERNS:
+        match = re.search(pat, cleaned, re.IGNORECASE)
+        if match:
+            cleaned = cleaned[match.end():].strip()
+            break
+    cleaned = re.sub(r"[\.!\?]+$", "", cleaned).strip()
+    return cleaned if cleaned else text.strip()
+
+
+def get_flux_image_url(prompt: str, seed: Optional[int] = None, width: int = 1024, height: int = 1024) -> str:
+    """Constructs high-definition FLUX.1 image generation URL from prompt."""
+    seed_val = seed if seed is not None else random.randint(100000, 99999999)
+    encoded = urllib.parse.quote(prompt.strip())
+    return f"https://image.pollinations.ai/prompt/{encoded}?width={width}&height={height}&seed={seed_val}&model=flux&nologo=true"
+
+
+def format_image_markdown(prompt: str, image_url: str) -> str:
+    """Formats markdown response containing rendered image and HD download link."""
+    escaped_prompt = prompt.replace("\n", " ").strip()
+    return (
+        f"🎨 **Generated AI Image with FLUX.1**\n\n"
+        f"**Prompt:** *\"{escaped_prompt}\"*\n\n"
+        f"![{escaped_prompt}]({image_url})\n\n"
+        f"[📥 **Click here to Open / Download Full HD Image**]({image_url})\n\n"
+        f"> 💡 *Tip: You can generate different styles or variations anytime (e.g. \"/image {escaped_prompt} in anime style\" or \"photorealistic 8K render\")!*"
+    )
 
 
 class MockAIEngine:
@@ -17,7 +66,14 @@ class MockAIEngine:
 
     @staticmethod
     def generate_reply(messages: List[Dict[str, Any]], system_prompt: str) -> str:
-        last_msg = messages[-1]["content"].lower().strip() if messages else ""
+        raw_last = messages[-1]["content"].strip() if messages else ""
+        last_msg = raw_last.lower()
+
+        # AI Image Generation requests
+        if is_image_request(raw_last):
+            prompt = extract_image_prompt(raw_last)
+            url = get_flux_image_url(prompt)
+            return format_image_markdown(prompt, url)
 
         # Coding requests
         if any(w in last_msg for w in ["python", "code", "function", "flutter", "flet", "react", "bug", "algorithm"]):
@@ -249,6 +305,14 @@ async def stream_ai_response(
     settings: Dict[str, str],
 ) -> AsyncGenerator[str, None]:
     """Unified entrypoint for streaming AI responses based on selected provider."""
+    # Fast path for AI Image Generation requests across all providers
+    raw_last = messages[-1]["content"].strip() if messages else ""
+    if is_image_request(raw_last):
+        prompt = extract_image_prompt(raw_last)
+        url = get_flux_image_url(prompt)
+        yield format_image_markdown(prompt, url)
+        return
+
     provider = settings.get("provider", "demo").lower()
     system_prompt = settings.get("system_prompt", "")
 

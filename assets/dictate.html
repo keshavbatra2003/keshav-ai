@@ -1,1 +1,732 @@
-<h1>Dictation Test</h1>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Voice Dictation - KESHAV AI by Keshav Batra</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --card-bg: #151d2f;
+            --card-border: rgba(255, 255, 255, 0.08);
+            --primary: #6366f1;
+            --primary-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+            --primary-glow: rgba(99, 102, 241, 0.35);
+            --text-main: #f8fafc;
+            --text-sub: #94a3b8;
+            --danger: #ef4444;
+            --success: #10b981;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 580px;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 24px;
+            padding: 28px 24px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5), 0 0 80px rgba(99, 102, 241, 0.08);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-title-box {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .header h1 {
+            font-size: 20px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header p {
+            font-size: 12px;
+            color: var(--text-sub);
+        }
+
+        .back-btn {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--card-border);
+            color: var(--text-main);
+            padding: 8px 14px;
+            border-radius: 12px;
+            font-size: 13px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        .mic-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px 0;
+            gap: 16px;
+        }
+
+        .mic-button-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .pulse-ring {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: var(--primary-gradient);
+            opacity: 0;
+            transform: scale(0.9);
+            pointer-events: none;
+            transition: all 0.3s ease;
+        }
+
+        .pulse-ring.active {
+            animation: pulseWave 1.8s infinite ease-out;
+        }
+
+        @keyframes pulseWave {
+            0% {
+                transform: scale(0.95);
+                opacity: 0.7;
+            }
+            50% {
+                transform: scale(1.4);
+                opacity: 0.25;
+            }
+            100% {
+                transform: scale(1.75);
+                opacity: 0;
+            }
+        }
+
+        .mic-btn {
+            position: relative;
+            z-index: 2;
+            width: 82px;
+            height: 82px;
+            border-radius: 50%;
+            border: none;
+            background: var(--primary-gradient);
+            box-shadow: 0 10px 25px var(--primary-glow);
+            color: #ffffff;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
+        }
+
+        .mic-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .mic-btn:active {
+            transform: scale(0.95);
+        }
+
+        .mic-btn.listening {
+            background: linear-gradient(135deg, #ef4444 0%, #f43f5e 100%);
+            box-shadow: 0 10px 30px rgba(239, 68, 68, 0.45);
+        }
+
+        .mic-btn svg {
+            width: 36px;
+            height: 36px;
+            fill: currentColor;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 14px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            font-size: 13px;
+            color: var(--text-sub);
+            font-weight: 500;
+        }
+
+        .status-badge.listening {
+            background: rgba(239, 68, 68, 0.15);
+            color: #fca5a5;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--text-sub);
+        }
+
+        .status-dot.listening {
+            background: #ef4444;
+            box-shadow: 0 0 8px #ef4444;
+            animation: blink 1s infinite alternate;
+        }
+
+        @keyframes blink {
+            from { opacity: 0.3; }
+            to { opacity: 1; }
+        }
+
+        .transcript-wrapper {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .transcript-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            color: var(--text-sub);
+        }
+
+        .transcript-box {
+            width: 100%;
+            min-height: 130px;
+            max-height: 240px;
+            background: rgba(0, 0, 0, 0.35);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 14px 16px;
+            color: var(--text-main);
+            font-size: 15px;
+            line-height: 1.6;
+            resize: vertical;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .transcript-box:focus {
+            border-color: var(--primary);
+        }
+
+        .transcript-box::placeholder {
+            color: rgba(148, 163, 184, 0.5);
+        }
+
+        .tools-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .lang-select {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--card-border);
+            color: var(--text-main);
+            padding: 7px 12px;
+            border-radius: 10px;
+            font-size: 12.5px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .lang-select option {
+            background: #1e293b;
+            color: #ffffff;
+        }
+
+        .clear-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-sub);
+            font-size: 12px;
+            cursor: pointer;
+            text-decoration: underline;
+            padding: 4px;
+        }
+
+        .clear-btn:hover {
+            color: var(--danger);
+        }
+
+        .chips-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .chip {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: var(--text-sub);
+            padding: 5px 11px;
+            border-radius: 16px;
+            font-size: 11.5px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .chip:hover {
+            background: rgba(99, 102, 241, 0.15);
+            color: #c7d2fe;
+            border-color: rgba(99, 102, 241, 0.3);
+        }
+
+        .actions-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 4px;
+        }
+
+        .primary-action-btn {
+            background: var(--primary-gradient);
+            border: none;
+            color: #ffffff;
+            padding: 14px 20px;
+            border-radius: 14px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 8px 20px var(--primary-glow);
+            transition: all 0.2s ease;
+        }
+
+        .primary-action-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 12px 26px var(--primary-glow);
+        }
+
+        .primary-action-btn:active {
+            transform: translateY(0);
+        }
+
+        .secondary-actions-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .secondary-btn {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.07);
+            border: 1px solid var(--card-border);
+            color: var(--text-main);
+            padding: 10px 14px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .secondary-btn:hover {
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        .mobile-tip {
+            font-size: 11.5px;
+            color: var(--text-sub);
+            text-align: center;
+            line-height: 1.5;
+            padding: 8px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px dashed rgba(255, 255, 255, 0.08);
+        }
+
+        .footer-cred {
+            text-align: center;
+            font-size: 11px;
+            color: rgba(148, 163, 184, 0.5);
+            margin-top: 8px;
+        }
+
+        .not-supported-banner {
+            display: none;
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #fca5a5;
+            padding: 12px;
+            border-radius: 12px;
+            font-size: 12.5px;
+            line-height: 1.5;
+        }
+
+        /* Toast notification */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            background: #1e293b;
+            color: #ffffff;
+            border: 1px solid var(--primary);
+            padding: 10px 18px;
+            border-radius: 10px;
+            font-size: 13px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-title-box">
+                <h1>🎙️ KESHAV AI Dictation</h1>
+                <p>Created & developed by Keshav Batra</p>
+            </div>
+            <a href="javascript:goBackToChat()" class="back-btn">
+                <span>← Chat</span>
+            </a>
+        </div>
+
+        <!-- Unsupported warning if browser lacks Web Speech -->
+        <div id="unsupportedWarning" class="not-supported-banner">
+            ⚠️ <strong>Microphone dictation is not natively supported by this browser.</strong><br>
+            Please open this site in <strong>Google Chrome, Safari, or Microsoft Edge</strong>, or use your phone keyboard's built-in 🎙️ mic key.
+        </div>
+
+        <!-- Mic Control & Visual Feedback -->
+        <div class="mic-section">
+            <div class="mic-button-wrapper">
+                <div id="pulseRing" class="pulse-ring"></div>
+                <button id="micBtn" class="mic-btn" onclick="toggleRecognition()" title="Click to start/pause listening">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+                        <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+                    </svg>
+                </button>
+            </div>
+
+            <div id="statusBadge" class="status-badge">
+                <span id="statusDot" class="status-dot"></span>
+                <span id="statusText">Tap microphone to speak</span>
+            </div>
+        </div>
+
+        <!-- Transcript Area -->
+        <div class="transcript-wrapper">
+            <div class="transcript-header">
+                <span>Recognized Speech (editable):</span>
+                <div class="tools-row">
+                    <select id="langSelect" class="lang-select" onchange="changeLanguage()">
+                        <option value="en-US" selected>🇺🇸 English (US)</option>
+                        <option value="en-IN">🇮🇳 English (India)</option>
+                        <option value="en-GB">🇬🇧 English (UK)</option>
+                        <option value="hi-IN">🇮🇳 हिन्दी (Hindi)</option>
+                        <option value="es-ES">🇪🇸 Español (Spanish)</option>
+                        <option value="fr-FR">🇫🇷 Français (French)</option>
+                        <option value="de-DE">🇩🇪 Deutsch (German)</option>
+                        <option value="ar-SA">🇸🇦 العربية (Arabic)</option>
+                        <option value="zh-CN">🇨🇳 中文 (Mandarin)</option>
+                    </select>
+                    <button class="clear-btn" onclick="clearTranscript()">Clear</button>
+                </div>
+            </div>
+
+            <textarea 
+                id="transcriptBox" 
+                class="transcript-box" 
+                placeholder="Speak clearly into your microphone... your words will appear here in real time!"
+            ></textarea>
+        </div>
+
+        <!-- Quick Sample Chips -->
+        <div class="chips-container">
+            <span class="chip" onclick="appendSample('Explain quantum computing in simple bullet points')">💡 Quantum Computing</span>
+            <span class="chip" onclick="appendSample('Write a Python FastAPI boilerplate with health check')">💻 Python API</span>
+            <span class="chip" onclick="appendSample('Draft a polite meeting follow-up email')">📝 Follow-up Email</span>
+            <span class="chip" onclick="appendSample('/image a futuristic cybernetic tiger in neon rain')">🎨 Generate AI Image</span>
+        </div>
+
+        <!-- Primary Action Buttons -->
+        <div class="actions-group">
+            <button class="primary-action-btn" onclick="submitToChat(true)">
+                <span>🚀 Ask KESHAV AI (Send Now)</span>
+            </button>
+
+            <div class="secondary-actions-row">
+                <button class="secondary-btn" onclick="submitToChat(false)">
+                    <span>✏️ Put in Prompt Box</span>
+                </button>
+                <button class="secondary-btn" onclick="copyTranscript()">
+                    <span>📋 Copy Text</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Mobile tip -->
+        <div class="mobile-tip">
+            📱 <strong>Instant Mobile Dictation:</strong> You can also tap directly in the chat box on your phone and press the 🎙️ mic button on your Apple / Gboard keyboard!
+        </div>
+
+        <div class="footer-cred">
+            KESHAV AI Assistant • Developed by Keshav Batra
+        </div>
+    </div>
+
+    <div id="toast" class="toast">Copied to clipboard!</div>
+
+    <script>
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        let recognition = null;
+        let isListening = false;
+        let finalTranscript = "";
+
+        const micBtn = document.getElementById("micBtn");
+        const pulseRing = document.getElementById("pulseRing");
+        const statusBadge = document.getElementById("statusBadge");
+        const statusDot = document.getElementById("statusDot");
+        const statusText = document.getElementById("statusText");
+        const transcriptBox = document.getElementById("transcriptBox");
+        const langSelect = document.getElementById("langSelect");
+        const unsupportedWarning = document.getElementById("unsupportedWarning");
+
+        // Parse session_id from URL query if present
+        const urlParams = new URLSearchParams(window.location.search);
+        const currentSessionId = urlParams.get("session_id") || "";
+
+        // Check SpeechRecognition support
+        if (!SpeechRecognition) {
+            unsupportedWarning.style.display = "block";
+            statusText.textContent = "Web Speech not supported in this browser";
+        } else {
+            initRecognition();
+        }
+
+        function initRecognition() {
+            recognition = new SpeechRecognition();
+            recognition.continuous = true;
+            recognition.interimResults = true;
+            recognition.lang = langSelect.value;
+
+            recognition.onstart = function() {
+                isListening = true;
+                micBtn.classList.add("listening");
+                pulseRing.classList.add("active");
+                statusBadge.classList.add("listening");
+                statusDot.classList.add("listening");
+                statusText.textContent = "Listening... Speak clearly now";
+            };
+
+            recognition.onresult = function(event) {
+                let interimTranscript = "";
+                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    if (event.results[i].isFinal) {
+                        finalTranscript += event.results[i][0].transcript + " ";
+                    } else {
+                        interimTranscript += event.results[i][0].transcript;
+                    }
+                }
+                const display = (finalTranscript + interimTranscript).trim();
+                if (display) {
+                    transcriptBox.value = display;
+                }
+            };
+
+            recognition.onerror = function(event) {
+                console.warn("Speech recognition event:", event.error);
+                if (event.error === "not-allowed" || event.error === "permission-denied") {
+                    statusText.textContent = "Microphone access blocked. Please allow permissions in browser.";
+                    stopRecognition();
+                }
+            };
+
+            recognition.onend = function() {
+                if (isListening) {
+                    try {
+                        recognition.start();
+                    } catch (e) {
+                        stopRecognition();
+                    }
+                } else {
+                    stopRecognition();
+                }
+            };
+
+            // Attempt auto-start on load
+            setTimeout(() => {
+                startRecognition();
+            }, 300);
+        }
+
+        function toggleRecognition() {
+            if (!recognition) {
+                showToast("Speech recognition is not supported in this browser.");
+                return;
+            }
+            if (isListening) {
+                stopRecognition();
+            } else {
+                startRecognition();
+            }
+        }
+
+        function startRecognition() {
+            if (!recognition) return;
+            try {
+                finalTranscript = transcriptBox.value.trim() ? transcriptBox.value.trim() + " " : "";
+                recognition.start();
+            } catch (e) {
+                // Already started or gesture required
+            }
+        }
+
+        function stopRecognition() {
+            isListening = false;
+            if (recognition) {
+                try {
+                    recognition.stop();
+                } catch(e) {}
+            }
+            micBtn.classList.remove("listening");
+            pulseRing.classList.remove("active");
+            statusBadge.classList.remove("listening");
+            statusDot.classList.remove("listening");
+            statusText.textContent = "Paused • Tap mic to resume";
+        }
+
+        function changeLanguage() {
+            if (!recognition) return;
+            const wasListening = isListening;
+            stopRecognition();
+            recognition.lang = langSelect.value;
+            if (wasListening) {
+                setTimeout(startRecognition, 200);
+            }
+        }
+
+        function clearTranscript() {
+            finalTranscript = "";
+            transcriptBox.value = "";
+            transcriptBox.focus();
+        }
+
+        function appendSample(sampleText) {
+            const current = transcriptBox.value.trim();
+            if (current) {
+                transcriptBox.value = current + " " + sampleText;
+            } else {
+                transcriptBox.value = sampleText;
+            }
+            finalTranscript = transcriptBox.value + " ";
+            showToast("Sample prompt added!");
+        }
+
+        function submitToChat(autoSend) {
+            stopRecognition();
+            const text = transcriptBox.value.trim();
+            if (!text) {
+                showToast("Please speak or enter text first!");
+                return;
+            }
+
+            let targetUrl = "/?prompt=" + encodeURIComponent(text);
+            if (autoSend) {
+                targetUrl += "&auto_send=1";
+            }
+            if (currentSessionId) {
+                targetUrl += "&session_id=" + encodeURIComponent(currentSessionId);
+            }
+
+            window.location.href = targetUrl;
+        }
+
+        function goBackToChat() {
+            stopRecognition();
+            let targetUrl = "/";
+            if (currentSessionId) {
+                targetUrl += "?session_id=" + encodeURIComponent(currentSessionId);
+            }
+            window.location.href = targetUrl;
+        }
+
+        function copyTranscript() {
+            const text = transcriptBox.value.trim();
+            if (!text) {
+                showToast("Nothing to copy!");
+                return;
+            }
+            navigator.clipboard.writeText(text).then(() => {
+                showToast("Transcript copied to clipboard!");
+            }).catch(() => {
+                showToast("Copied to clipboard!");
+            });
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById("toast");
+            toast.textContent = msg;
+            toast.classList.add("show");
+            setTimeout(() => {
+                toast.classList.remove("show");
+            }, 2500);
+        }
+    </script>
+</body>
+</html>

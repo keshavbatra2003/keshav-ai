@@ -26,7 +26,18 @@ def main(page: ft.Page):
     # and cannot see conversations created by anyone else.
     database.init_db()
     client_id = str(uuid.uuid4())
-    current_session_id = database.get_or_create_initial_session(client_id=client_id)
+
+    # Read query parameters (e.g. from /dictate speech recognition redirect)
+    url_params = page.query.to_dict if hasattr(page, "query") and page.query else {}
+    url_prompt = url_params.get("prompt", "").strip()
+    url_session = url_params.get("session_id", "").strip()
+    auto_send = (url_params.get("auto_send", "") == "1")
+
+    if url_session and database.get_session(url_session):
+        current_session_id = url_session
+    else:
+        current_session_id = database.get_or_create_initial_session(client_id=client_id)
+
     settings = database.get_all_settings()
     is_dark = (settings.get("theme_mode", "dark") == "dark")
 
@@ -232,13 +243,55 @@ def main(page: ft.Page):
     # Add to page
     page.add(main_layout)
 
+    # Pre-populate voice dictated text if arrived from /dictate
+    if url_prompt:
+        chat_view.text_input.value = url_prompt
+        try:
+            page.update()
+        except Exception:
+            pass
+
+        if auto_send:
+            async def _do_auto_send():
+                import asyncio
+                await asyncio.sleep(0.35)
+                chat_view.send_message()
+
+            page.run_task(_do_auto_send)
+        else:
+            try:
+                page.show_dialog(
+                    ft.SnackBar(
+                        content=ft.Text("🎙️ Dictated speech loaded into prompt box! Tap Send to ask."),
+                        duration=3500,
+                    )
+                )
+            except Exception:
+                pass
+
 
 if __name__ == "__main__":
     import os
     run_web = "--web" in sys.argv
     if run_web:
+        import uvicorn
+        from fastapi import FastAPI
+        from fastapi.responses import HTMLResponse
+        import flet.fastapi as flet_fastapi
+
+        app = FastAPI(title="KESHAV AI by Keshav Batra")
+
+        @app.get("/dictate", response_class=HTMLResponse)
+        async def dictate_page():
+            dictate_path = os.path.join(os.path.dirname(__file__), "assets", "dictate.html")
+            with open(dictate_path, "r", encoding="utf-8") as f:
+                return f.read()
+
+        flet_app = flet_fastapi.app(main, assets_dir="assets")
+        app.mount("/", flet_app)
+
         port = int(os.environ.get("PORT", 8550))
-        host = os.environ.get("HOST", "127.0.0.1")
-        ft.run(main, host=host, port=port, view=ft.AppView.WEB_BROWSER)
+        host = os.environ.get("HOST", "0.0.0.0" if os.environ.get("PORT") else "127.0.0.1")
+        uvicorn.run(app, host=host, port=port)
     else:
         ft.run(main)

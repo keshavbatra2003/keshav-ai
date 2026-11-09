@@ -21,6 +21,8 @@ from ui.chat_bubble import (
 from voice_service import voice_service
 
 SUGGESTED_PROMPTS = [
+    ("🎨 AI Image: Cyberpunk City", "/image futuristic cyberpunk neon city in rain 4k photorealistic"),
+    ("🎨 AI Image: Cute Baby Panda", "/image adorable fluffy baby panda drinking milk in bamboo forest"),
     ("💡 Explain Quantum Computing", "Explain the basics of quantum computing in simple bullet points."),
     ("💻 Python FastAPI App", "Write a clean, production-ready Python FastAPI boilerplate with health check and CRUD endpoints."),
     ("📝 Draft Professional Email", "Draft a polite and concise email declining a meeting invite due to a schedule conflict."),
@@ -306,13 +308,22 @@ class ChatView(ft.Container):
             ),
         )
 
-        # Microphone / Voice Dictation button
+        # AI Image Generation button
+        self.image_btn = ft.IconButton(
+            icon=ft.Icons.PALETTE_ROUNDED,
+            icon_size=20,
+            icon_color=self.theme["primary"],
+            tooltip="Generate AI Image with FLUX.1 (/image)",
+            on_click=self._on_image_btn_click,
+        )
+
+        # Microphone / Real Voice Dictation button
         self.voice_btn = ft.IconButton(
             icon=ft.Icons.MIC_ROUNDED,
             icon_size=20,
-            icon_color=self.theme["text_secondary"],
+            icon_color=self.theme["primary"],
             tooltip="Voice Dictation (Speech-to-Text)",
-            on_click=lambda _: self._toggle_inline_voice(),
+            url=f"/dictate?session_id={self.session_id}",
         )
 
         # Bottom text input
@@ -401,6 +412,7 @@ class ChatView(ft.Container):
                         spacing=4,
                         controls=[
                             self.attach_btn,
+                            self.image_btn,
                             self.voice_btn,
                             self.text_input,
                             self.send_btn,
@@ -528,6 +540,20 @@ class ChatView(ft.Container):
         else:
             new_id = database.create_session(title="New Chat", client_id=self.client_id)
             self.load_session(new_id)
+
+    def _on_image_btn_click(self, _):
+        """Quickly prefixes the prompt input with /image for FLUX.1 generation."""
+        current = (self.text_input.value or "").strip()
+        if not current.startswith("/image"):
+            if current:
+                self.text_input.value = f"/image {current} "
+            else:
+                self.text_input.value = "/image "
+        try:
+            self.text_input.update()
+            self.app_page.run_task(self.text_input.focus)
+        except Exception:
+            pass
 
     def _toggle_inline_voice(self, force_off: bool = False):
         """Activates or stops inline voice dictation directly inside chat bar."""
@@ -712,6 +738,12 @@ class ChatView(ft.Container):
 
     def load_session(self, session_id: str):
         self.session_id = session_id
+        if hasattr(self, "voice_btn") and self.voice_btn:
+            self.voice_btn.url = f"/dictate?session_id={session_id}"
+            try:
+                self.voice_btn.update()
+            except RuntimeError:
+                pass
         session = database.get_session(session_id)
         if not session:
             return
@@ -1008,6 +1040,45 @@ class ChatView(ft.Container):
     async def _process_streaming_ai_response(self, thinking_bubble: ft.Control):
         settings = database.get_all_settings()
         history = database.get_messages(self.session_id)
+
+        # Check if the user prompt is an AI image generation request!
+        last_user_msg = ""
+        for msg in reversed(history):
+            if msg.get("role") == "user":
+                last_user_msg = msg.get("content", "").strip()
+                break
+
+        if ai_service.is_image_request(last_user_msg):
+            image_prompt = ai_service.extract_image_prompt(last_user_msg)
+            image_url = ai_service.get_flux_image_url(image_prompt)
+            full_text = ai_service.format_image_markdown(image_prompt, image_url)
+
+            if thinking_bubble in self.messages_list.controls:
+                self.messages_list.controls.remove(thinking_bubble)
+
+            now_str = datetime.now().isoformat()
+            assistant_bubble = AssistantBubble(
+                content=full_text,
+                timestamp=now_str,
+                is_dark=self.is_dark,
+                on_copy=self._copy_to_clipboard,
+                on_speak=self._speak_message,
+                model_name="FLUX.1 Image AI",
+            )
+            self.messages_list.controls.append(assistant_bubble)
+            database.add_message(self.session_id, "assistant", full_text)
+            try:
+                self.messages_list.update()
+            except RuntimeError:
+                pass
+            self.is_generating = False
+            self.send_icon.visible = True
+            self.send_spinner.visible = False
+            try:
+                self.send_btn.update()
+            except RuntimeError:
+                pass
+            return
 
         prov = settings.get("provider", "demo")
         model_tag = "Demo"
