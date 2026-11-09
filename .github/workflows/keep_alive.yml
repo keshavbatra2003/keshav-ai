@@ -1,0 +1,16 @@
+name: Keep KESHAV AI Awake 24/7
+
+on:
+  schedule:
+    # Run every 10 minutes to prevent Render free-tier spindown
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+jobs:
+  keep_alive:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping KESHAV AI Health Endpoint
+        run: |
+          echo "Pinging KESHAV AI on Render..."
+          curl -f -sS "https://keshav-ai.onrender.com/ping" || true

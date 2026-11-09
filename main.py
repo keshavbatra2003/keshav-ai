@@ -281,6 +281,16 @@ if __name__ == "__main__":
 
         app = FastAPI(title="KESHAV AI by Keshav Batra")
 
+        @app.get("/health")
+        @app.get("/ping")
+        async def ping_health():
+            return {
+                "status": "online",
+                "app": "KESHAV AI",
+                "developer": "Keshav Batra",
+                "keep_alive": True,
+            }
+
         @app.get("/dictate", response_class=HTMLResponse)
         async def dictate_page():
             dictate_path = os.path.join(os.path.dirname(__file__), "assets", "dictate.html")
