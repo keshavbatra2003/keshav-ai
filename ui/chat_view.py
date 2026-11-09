@@ -1384,7 +1384,7 @@ class ChatView(ft.Container):
         """Modal dialog displaying public shareable link with WhatsApp and Clipboard copy buttons."""
         import urllib.parse
 
-        share_url = database.get_setting("share_url", "https://keshav-ai.onrender.com")
+        share_url = database.get_setting("share_url", "https://keshavai.onrender.com")
         lan_url = database.get_setting("lan_url", "http://192.168.29.139:8550")
 
         share_text = f"🤖 Chat with KESHAV AI: {share_url}"
