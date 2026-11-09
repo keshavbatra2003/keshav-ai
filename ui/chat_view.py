@@ -82,16 +82,17 @@ class ChatView(ft.Container):
         self.text_input.bgcolor = self.theme["input_bg"]
         self.text_input.color = self.theme["text_primary"]
         self.text_input.hint_style = ft.TextStyle(size=14, color=self.theme["text_muted"])
-        self.input_card.bgcolor = self.theme["surface"]
+        self.input_card.bgcolor = self.theme["input_bg"]
         self.input_card.border = ft.Border.all(1, self.theme["border"])
+        self.send_btn.bgcolor = "#FFFFFF" if is_dark else "#000000"
+        self.send_icon.color = "#000000" if is_dark else "#FFFFFF"
+        self.send_spinner.color = "#000000" if is_dark else "#FFFFFF"
+        if hasattr(self, "footer_disclaimer"):
+            self.footer_disclaimer.color = self.theme["text_muted"]
         self.header_container.bgcolor = self.theme["surface"]
         self.header_container.border = ft.Border(
             bottom=ft.BorderSide(1, self.theme["border"])
         )
-        if hasattr(self, "new_chat_btn"):
-            self.new_chat_btn.gradient = ft.LinearGradient(
-                colors=[self.theme["primary_gradient_start"], self.theme["primary_gradient_end"]],
-            )
         self.load_session(self.session_id)
 
     def set_mobile_mode(self, is_mobile: bool):
@@ -229,7 +230,7 @@ class ChatView(ft.Container):
 
         # Attach file button (using PickFiles client action for web & desktop compatibility)
         self.attach_btn = ft.IconButton(
-            icon=ft.Icons.ATTACH_FILE_ROUNDED,
+            icon=ft.Icons.ADD_ROUNDED,
             icon_size=20,
             icon_color=self.theme["text_secondary"],
             tooltip="Attach Code or Document",
@@ -326,9 +327,9 @@ class ChatView(ft.Container):
             url=f"/dictate?session_id={self.session_id}",
         )
 
-        # Bottom text input
+        # Bottom text input (ChatGPT style)
         self.text_input = ft.TextField(
-            hint_text="Ask KESHAV AI anything... (Press Enter to send, Shift+Enter for newline)",
+            hint_text="Message KESHAV AI...",
             hint_style=ft.TextStyle(size=14, color=self.theme["text_muted"]),
             multiline=True,
             shift_enter=True,
@@ -340,17 +341,15 @@ class ChatView(ft.Container):
             on_submit=lambda _: self.send_message(),
         )
 
-        # Send button
-        self.send_icon = ft.Icon(ft.Icons.ARROW_UPWARD_ROUNDED, size=20, color="#FFFFFF")
-        self.send_spinner = ft.ProgressRing(width=18, height=18, stroke_width=2.5, color="#FFFFFF", visible=False)
+        # ChatGPT Circular Send Button
+        self.send_icon = ft.Icon(ft.Icons.ARROW_UPWARD_ROUNDED, size=18, color="#000000" if self.is_dark else "#FFFFFF")
+        self.send_spinner = ft.ProgressRing(width=16, height=16, stroke_width=2.2, color="#000000" if self.is_dark else "#FFFFFF", visible=False)
 
         self.send_btn = ft.Container(
-            width=38,
-            height=38,
-            border_radius=19,
-            gradient=ft.LinearGradient(
-                colors=[self.theme["primary_gradient_start"], self.theme["primary_gradient_end"]],
-            ),
+            width=34,
+            height=34,
+            border_radius=17,
+            bgcolor="#FFFFFF" if self.is_dark else "#000000",
             alignment=ft.Alignment(0, 0),
             content=ft.Stack(
                 alignment=ft.Alignment(0, 0),
@@ -395,12 +394,17 @@ class ChatView(ft.Container):
             ),
         )
 
-        # Input Card
+        # ChatGPT Floating Input Capsule
         self.input_card = ft.Container(
-            padding=ft.Padding(8, 6, 8, 6),
-            bgcolor=self.theme["surface"],
+            padding=ft.Padding(10, 6, 10, 6),
+            bgcolor=self.theme["input_bg"],
             border=ft.Border.all(1, self.theme["border"]),
-            border_radius=24,
+            border_radius=28,
+            shadow=ft.BoxShadow(
+                blur_radius=16,
+                spread_radius=0,
+                color="rgba(0,0,0,0.25)" if self.is_dark else "rgba(0,0,0,0.06)",
+            ),
             content=ft.Column(
                 tight=True,
                 spacing=4,
@@ -408,7 +412,7 @@ class ChatView(ft.Container):
                     self.attachment_container,
                     self.inline_voice_bar,
                     ft.Row(
-                        vertical_alignment=ft.CrossAxisAlignment.END,
+                        vertical_alignment=ft.CrossAxisAlignment.CENTER,
                         spacing=4,
                         controls=[
                             self.attach_btn,
@@ -422,13 +426,29 @@ class ChatView(ft.Container):
             ),
         )
 
+        # ChatGPT Footer Disclaimer
+        self.footer_disclaimer = ft.Text(
+            "KESHAV AI can make mistakes. Check important info. • Developed by Keshav Batra",
+            size=11,
+            color=self.theme["text_muted"],
+            text_align=ft.TextAlign.CENTER,
+        )
+
         # Input Wrapper with max width constraint for laptop/desktop
         self.input_wrapper = ft.Container(
-            padding=ft.Padding(8, 4, 8, 8) if self.is_mobile else ft.Padding(16, 8, 16, 14),
+            padding=ft.Padding(8, 4, 8, 8) if self.is_mobile else ft.Padding(16, 6, 16, 12),
             alignment=ft.Alignment(0, 0),
             content=ft.Container(
                 max_width=780,
-                content=self.input_card,
+                content=ft.Column(
+                    tight=True,
+                    spacing=6,
+                    horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                    controls=[
+                        self.input_card,
+                        self.footer_disclaimer,
+                    ],
+                ),
             ),
         )
 
@@ -795,84 +815,68 @@ class ChatView(ft.Container):
             pass
 
     def _build_empty_state(self) -> ft.Control:
-        prompt_chips = []
-        for title, prompt_text in SUGGESTED_PROMPTS:
-            chip = ft.Container(
-                padding=ft.Padding(12, 10, 12, 10),
-                border_radius=12,
+        prompt_cards = [
+            ("🎨 Create image", "Cyberpunk neon city in rain", "/image futuristic cyberpunk neon city in rain 4k photorealistic"),
+            ("💡 Brainstorm", "Startup ideas for 2026", "Brainstorm 5 innovative startup ideas for 2026 leveraging AI agents and local-first software."),
+            ("💻 Code Python", "FastAPI boilerplate with CRUD", "Write a clean, production-ready Python FastAPI boilerplate with health check and CRUD endpoints."),
+            ("📝 Draft email", "Polite meeting follow-up", "Draft a polite and concise email declining a meeting invite due to a schedule conflict."),
+        ]
+
+        card_controls = []
+        for icon_title, desc, prompt_text in prompt_cards:
+            card = ft.Container(
+                width=240 if not self.is_mobile else None,
+                padding=ft.Padding(14, 12, 14, 12),
+                border_radius=14,
                 bgcolor=self.theme["surface_variant"],
                 border=ft.Border.all(1, self.theme["border"]),
                 on_click=lambda _, p=prompt_text: self._use_prompt(p),
-                content=ft.Row(
-                    alignment=ft.MainAxisAlignment.START,
-                    spacing=6,
+                content=ft.Column(
+                    spacing=3,
+                    tight=True,
                     controls=[
-                        ft.Icon(ft.Icons.AUTO_AWESOME_OUTLINED, size=15, color=self.theme["primary"]),
-                        ft.Text(
-                            title,
-                            size=12.5,
-                            weight=ft.FontWeight.W_500,
-                            color=self.theme["text_primary"],
-                        ),
+                        ft.Text(icon_title, size=13, weight=ft.FontWeight.W_600, color=self.theme["text_primary"]),
+                        ft.Text(desc, size=11.5, color=self.theme["text_muted"]),
                     ],
                 ),
             )
-            prompt_chips.append(chip)
+            card_controls.append(card)
 
         return ft.Container(
-            padding=ft.Padding(16, 40, 16, 40),
+            padding=ft.Padding(16, 50, 16, 30),
             alignment=ft.Alignment(0, 0),
             content=ft.Column(
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                 spacing=16,
                 controls=[
                     ft.Container(
-                        width=56,
-                        height=56,
-                        border_radius=28,
-                        gradient=ft.LinearGradient(
-                            colors=[self.theme["primary_gradient_start"], self.theme["primary_gradient_end"]],
-                        ),
+                        width=48,
+                        height=48,
+                        border_radius=24,
+                        bgcolor=self.theme["primary"],
                         alignment=ft.Alignment(0, 0),
-                        content=ft.Icon(ft.Icons.AUTO_AWESOME_ROUNDED, size=28, color="#FFFFFF"),
+                        content=ft.Icon(ft.Icons.AUTO_AWESOME_ROUNDED, size=24, color="#FFFFFF"),
                     ),
                     ft.Text(
-                        "How can KESHAV AI assist you today?",
-                        size=20,
+                        "What can I help with?",
+                        size=28,
                         weight=ft.FontWeight.BOLD,
                         color=self.theme["text_primary"],
                         text_align=ft.TextAlign.CENTER,
                     ),
                     ft.Text(
-                        "Developed by Keshav Batra • Works seamlessly on iPhone, Android, and PC. Ask questions, attach files, or speak aloud.",
-                        size=13,
-                        color=self.theme["text_secondary"],
+                        "KESHAV AI • Developed by Keshav Batra",
+                        size=12.5,
+                        color=self.theme["text_muted"],
                         text_align=ft.TextAlign.CENTER,
                     ),
-                    ft.Container(
-                        padding=ft.Padding(10, 6, 12, 6),
-                        border_radius=16,
-                        bgcolor="#1E1B4B" if self.is_dark else "#EEF2FF",
-                        border=ft.Border.all(1, self.theme["primary"]),
-                        on_click=lambda _: self.on_open_settings() if self.on_open_settings else None,
-                        content=ft.Row(
-                            tight=True,
-                            spacing=6,
-                            controls=[
-                                ft.Icon(ft.Icons.BOLT_ROUNDED, size=15, color=self.theme["primary"]),
-                                ft.Text(
-                                    "Connect Live Online AI (Google Gemini, Groq, OpenAI) in ⚙️ Settings",
-                                    size=12,
-                                    weight=ft.FontWeight.W_600,
-                                    color=self.theme["primary"],
-                                ),
-                            ],
-                        ),
-                    ),
-                    ft.Container(height=4),
-                    ft.Column(
-                        spacing=8,
-                        controls=prompt_chips,
+                    ft.Container(height=8),
+                    ft.Row(
+                        wrap=True,
+                        alignment=ft.MainAxisAlignment.CENTER,
+                        spacing=10,
+                        run_spacing=10,
+                        controls=card_controls,
                     ),
                 ],
             ),

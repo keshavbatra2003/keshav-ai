@@ -116,55 +116,79 @@ class HistorySidebar(ft.Container):
             ],
         )
 
-        # "+ New Chat" Button
+        # ChatGPT-Style "New Chat" Button
         new_chat_btn = ft.Container(
             on_click=lambda _: self.on_new_chat(),
-            padding=ft.Padding(12, 10, 12, 10),
-            border_radius=12,
-            gradient=ft.LinearGradient(
-                colors=[self.theme["primary_gradient_start"], self.theme["primary_gradient_end"]],
-            ),
+            padding=ft.Padding(12, 9, 12, 9),
+            border_radius=10,
+            bgcolor=self.theme["surface_variant"],
+            border=ft.Border.all(1, self.theme["border"]),
             content=ft.Row(
-                alignment=ft.MainAxisAlignment.CENTER,
-                spacing=8,
+                alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
                 controls=[
-                    ft.Icon(ft.Icons.ADD_ROUNDED, size=18, color="#FFFFFF"),
-                    ft.Text("New Chat", size=13.5, weight=ft.FontWeight.W_600, color="#FFFFFF"),
+                    ft.Row(
+                        spacing=8,
+                        controls=[
+                            ft.Icon(ft.Icons.AUTO_AWESOME_ROUNDED, size=16, color=self.theme["primary"]),
+                            ft.Text("New chat", size=13.5, weight=ft.FontWeight.W_500, color=self.theme["text_primary"]),
+                        ],
+                    ),
+                    ft.Icon(ft.Icons.EDIT_OUTLINED, size=15, color=self.theme["text_muted"]),
+                ],
+            ),
+        )
+
+        # ChatGPT-Style User Profile Bar at bottom
+        user_profile_bar = ft.Container(
+            padding=ft.Padding(8, 8, 8, 8),
+            border_radius=12,
+            border=ft.Border(top=ft.BorderSide(1, self.theme["border"])),
+            on_click=lambda _: self.on_open_settings(),
+            content=ft.Row(
+                alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                controls=[
+                    ft.Row(
+                        spacing=9,
+                        vertical_alignment=ft.CrossAxisAlignment.CENTER,
+                        controls=[
+                            ft.Container(
+                                width=32,
+                                height=32,
+                                border_radius=16,
+                                bgcolor=self.theme["primary"],
+                                alignment=ft.Alignment(0, 0),
+                                content=ft.Text("KB", size=12, weight=ft.FontWeight.BOLD, color="#FFFFFF"),
+                            ),
+                            ft.Column(
+                                spacing=1,
+                                tight=True,
+                                controls=[
+                                    ft.Text("Keshav Batra", size=13, weight=ft.FontWeight.W_600, color=self.theme["text_primary"]),
+                                    ft.Text("Developer", size=11, color=self.theme["text_muted"]),
+                                ],
+                            ),
+                        ],
+                    ),
+                    ft.Icon(ft.Icons.SETTINGS_OUTLINED, size=18, color=self.theme["text_muted"]),
                 ],
             ),
         )
 
         self.content = ft.Column(
             expand=True,
-            spacing=14,
+            spacing=12,
             controls=[
                 brand_row,
                 new_chat_btn,
                 self.search_input,
                 ft.Text(
-                    "CONVERSATIONS",
+                    "CHATS",
                     size=10.5,
                     weight=ft.FontWeight.BOLD,
                     color=self.theme["text_muted"],
                 ),
                 self.session_list_view,
-                ft.Container(
-                    padding=ft.Padding(4, 10, 4, 4),
-                    border=ft.Border(top=ft.BorderSide(1, self.theme["border"])),
-                    content=ft.Row(
-                        alignment=ft.MainAxisAlignment.CENTER,
-                        spacing=6,
-                        controls=[
-                            ft.Icon(ft.Icons.CODE_ROUNDED, size=14, color=self.theme["primary"]),
-                            ft.Text(
-                                "Developed by Keshav Batra",
-                                size=11,
-                                color=self.theme["text_muted"],
-                                weight=ft.FontWeight.W_500,
-                            ),
-                        ],
-                    ),
-                ),
+                user_profile_bar,
             ],
         )
 

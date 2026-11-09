@@ -102,36 +102,27 @@ class AssistantBubble(ft.Row):
         )
 
         avatar = ft.Container(
-            width=34,
-            height=34,
-            border_radius=17,
-            gradient=ft.LinearGradient(
-                colors=[self.theme["primary_gradient_start"], self.theme["primary_gradient_end"]],
-            ),
+            width=30,
+            height=30,
+            border_radius=15,
+            bgcolor="#10A37F",
             alignment=ft.Alignment(0, 0),
-            content=ft.Icon(ft.Icons.AUTO_AWESOME_ROUNDED, size=18, color="#FFFFFF"),
+            content=ft.Icon(ft.Icons.AUTO_AWESOME_ROUNDED, size=16, color="#FFFFFF"),
         )
 
         bubble_container = ft.Container(
             expand=True,
-            padding=ft.Padding(14, 12, 14, 10),
-            bgcolor=self.theme["assistant_bubble"],
-            border=ft.Border.all(width=1, color=self.theme["border"]),
-            border_radius=ft.BorderRadius(
-                top_left=4,
-                top_right=18,
-                bottom_left=18,
-                bottom_right=18,
-            ),
+            padding=ft.Padding(6, 4, 6, 6),
+            bgcolor="transparent",
             content=ft.Column(
-                spacing=8,
+                spacing=6,
                 horizontal_alignment=ft.CrossAxisAlignment.START,
                 controls=[
                     self.markdown_control,
                     ft.Row(
-                        alignment=ft.MainAxisAlignment.END,
+                        alignment=ft.MainAxisAlignment.START,
                         vertical_alignment=ft.CrossAxisAlignment.CENTER,
-                        spacing=6,
+                        spacing=4,
                         controls=action_controls,
                     ),
                 ],
@@ -171,14 +162,14 @@ def create_user_bubble(
             badge = ft.Container(
                 padding=ft.Padding(6, 3, 8, 3),
                 border_radius=8,
-                bgcolor="#312E81",
-                border=ft.Border.all(1, "#4338CA"),
+                bgcolor=theme["surface_active"],
+                border=ft.Border.all(1, theme["border"]),
                 content=ft.Row(
                     tight=True,
                     spacing=4,
                     controls=[
-                        ft.Icon(ft.Icons.ATTACH_FILE_ROUNDED, size=13, color="#C7D2FE"),
-                        ft.Text(att_name, size=11, color="#E0E7FF", weight=ft.FontWeight.W_500),
+                        ft.Icon(ft.Icons.ATTACH_FILE_ROUNDED, size=13, color=theme["text_secondary"]),
+                        ft.Text(att_name, size=11, color=theme["text_primary"], weight=ft.FontWeight.W_500),
                     ],
                 ),
             )
@@ -197,7 +188,7 @@ def create_user_bubble(
         ft.Text(
             time_str,
             size=10.5,
-            color="#E0E7FF",
+            color=theme["text_muted"],
         ),
     ]
 
@@ -208,7 +199,7 @@ def create_user_bubble(
                 icon_size=13,
                 tooltip="Edit prompt",
                 style=ft.ButtonStyle(
-                    color="#E0E7FF",
+                    color=theme["text_muted"],
                     padding=0,
                 ),
                 on_click=lambda _, mid=message_id, c=content: on_edit(mid, c),
@@ -222,7 +213,7 @@ def create_user_bubble(
                 icon_size=13,
                 tooltip="Copy message",
                 style=ft.ButtonStyle(
-                    color="#E0E7FF",
+                    color=theme["text_muted"],
                     padding=0,
                 ),
                 on_click=lambda _, c=content: on_copy(c),
@@ -246,44 +237,29 @@ def create_user_bubble(
     ])
 
     user_bubble_container = ft.Container(
-        padding=ft.Padding(14, 12, 14, 10),
-        gradient=ft.LinearGradient(
-            colors=[theme["primary_gradient_start"], theme["primary_gradient_end"]],
-            begin=ft.Alignment(-1, 0),
-            end=ft.Alignment(1, 0),
-        ),
+        padding=ft.Padding(14, 10, 14, 8),
+        bgcolor=theme["user_bubble"],
+        border=ft.Border.all(1, theme["border"]),
         border_radius=ft.BorderRadius(
-            top_left=18,
-            top_right=4,
-            bottom_left=18,
-            bottom_right=18,
+            top_left=20,
+            top_right=20,
+            bottom_left=20,
+            bottom_right=6,
         ),
         content=ft.Column(
-            spacing=6,
+            spacing=4,
             horizontal_alignment=ft.CrossAxisAlignment.END,
             controls=column_controls,
         ),
     )
 
-    avatar = ft.Container(
-        width=34,
-        height=34,
-        border_radius=17,
-        bgcolor=theme["surface_variant"],
-        alignment=ft.Alignment(0, 0),
-        content=ft.Icon(ft.Icons.PERSON_ROUNDED, size=18, color=theme["text_primary"]),
-    )
-
     return ft.Row(
         alignment=ft.MainAxisAlignment.END,
         vertical_alignment=ft.CrossAxisAlignment.START,
+        spacing=8,
         controls=[
-            ft.Container(
-                expand=True,
-                alignment=ft.Alignment(1, 0),
-                content=user_bubble_container,
-            ),
-            avatar,
+            ft.Container(expand=True),  # Pushes bubble to the right
+            user_bubble_container,
         ],
     )
 
@@ -311,42 +287,32 @@ def create_thinking_bubble(is_dark: bool) -> ft.Control:
 
     return ft.Row(
         alignment=ft.MainAxisAlignment.START,
-        vertical_alignment=ft.CrossAxisAlignment.START,
+        vertical_alignment=ft.CrossAxisAlignment.CENTER,
+        spacing=10,
         controls=[
             ft.Container(
-                width=34,
-                height=34,
-                border_radius=17,
-                gradient=ft.LinearGradient(
-                    colors=[theme["primary_gradient_start"], theme["primary_gradient_end"]],
-                ),
+                width=30,
+                height=30,
+                border_radius=15,
+                bgcolor="#10A37F",
                 alignment=ft.Alignment(0, 0),
-                content=ft.Icon(ft.Icons.AUTO_AWESOME_ROUNDED, size=18, color="#FFFFFF"),
+                content=ft.Icon(ft.Icons.AUTO_AWESOME_ROUNDED, size=16, color="#FFFFFF"),
             ),
             ft.Container(
-                padding=ft.Padding(16, 12, 16, 12),
-                bgcolor=theme["assistant_bubble"],
-                border=ft.Border.all(width=1, color=theme["border"]),
-                border_radius=ft.BorderRadius(
-                    top_left=4,
-                    top_right=18,
-                    bottom_left=18,
-                    bottom_right=18,
-                ),
+                padding=ft.Padding(4, 4, 10, 4),
                 content=ft.Row(
-                    spacing=10,
+                    spacing=8,
                     controls=[
                         ft.ProgressRing(
                             width=14,
                             height=14,
-                            stroke_width=2.2,
+                            stroke_width=2.0,
                             color=theme["primary"],
                         ),
                         ft.Text(
-                            "KESHAV AI is thinking...",
-                            size=13,
+                            "Thinking...",
+                            size=13.5,
                             color=theme["text_secondary"],
-                            italic=True,
                         ),
                     ],
                 ),
