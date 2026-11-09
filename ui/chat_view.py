@@ -850,12 +850,13 @@ class ChatView(ft.Container):
                 spacing=16,
                 controls=[
                     ft.Container(
-                        width=48,
-                        height=48,
-                        border_radius=24,
+                        width=52,
+                        height=52,
+                        border_radius=26,
                         bgcolor="#FFFFFF" if self.is_dark else "#000000",
+                        border=ft.Border.all(1.5, "#383838" if self.is_dark else "#E5E5E5"),
                         alignment=ft.Alignment(0, 0),
-                        content=ft.Icon(ft.Icons.AUTO_AWESOME_ROUNDED, size=24, color="#000000" if self.is_dark else "#FFFFFF"),
+                        content=ft.Text("KB", size=20, weight=ft.FontWeight.BOLD, color="#000000" if self.is_dark else "#FFFFFF"),
                     ),
                     ft.Text(
                         "What can I help with?",

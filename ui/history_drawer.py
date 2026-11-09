@@ -93,8 +93,9 @@ class HistorySidebar(ft.Container):
                             height=32,
                             border_radius=16,
                             bgcolor="#FFFFFF" if self.is_dark else "#000000",
+                            border=ft.Border.all(1, "#383838" if self.is_dark else "#E5E5E5"),
                             alignment=ft.Alignment(0, 0),
-                            content=ft.Icon(ft.Icons.AUTO_AWESOME_ROUNDED, size=16, color="#000000" if self.is_dark else "#FFFFFF"),
+                            content=ft.Text("KB", size=12, weight=ft.FontWeight.BOLD, color="#000000" if self.is_dark else "#FFFFFF"),
                         ),
                         ft.Text(
                             "KESHAV AI",
@@ -127,7 +128,7 @@ class HistorySidebar(ft.Container):
                     ft.Row(
                         spacing=8,
                         controls=[
-                            ft.Icon(ft.Icons.AUTO_AWESOME_ROUNDED, size=16, color=self.theme["primary"]),
+                            ft.Icon(ft.Icons.ADD_ROUNDED, size=16, color=self.theme["text_primary"]),
                             ft.Text("New chat", size=13.5, weight=ft.FontWeight.W_500, color=self.theme["text_primary"]),
                         ],
                     ),
