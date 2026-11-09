@@ -29,7 +29,28 @@ class TestDictateEndpoint(unittest.TestCase):
             with open(dictate_path, "r", encoding="utf-8") as f:
                 return f.read()
 
+        @self.app.get("/robots.txt")
+        async def robots_txt():
+            return "User-agent: *\nAllow: /\nSitemap: https://keshav-ai.onrender.com/sitemap.xml\n"
+
+        @self.app.get("/sitemap.xml")
+        async def sitemap_xml():
+            return """<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://keshav-ai.onrender.com/</loc></url>
+</urlset>"""
+
         self.client = TestClient(self.app)
+
+    def test_robots_and_sitemap(self):
+        resp_robots = self.client.get("/robots.txt")
+        self.assertEqual(resp_robots.status_code, 200)
+        self.assertIn("User-agent: *", resp_robots.text)
+        self.assertIn("sitemap.xml", resp_robots.text)
+
+        resp_sitemap = self.client.get("/sitemap.xml")
+        self.assertEqual(resp_sitemap.status_code, 200)
+        self.assertIn("keshav-ai.onrender.com", resp_sitemap.text)
 
     def test_dictate_page_renders_html5_speech(self):
         resp = self.client.get("/dictate")

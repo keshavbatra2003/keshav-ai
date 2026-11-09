@@ -275,8 +275,8 @@ if __name__ == "__main__":
     run_web = "--web" in sys.argv
     if run_web:
         import uvicorn
-        from fastapi import FastAPI
-        from fastapi.responses import HTMLResponse
+        from fastapi import FastAPI, Response
+        from fastapi.responses import HTMLResponse, PlainTextResponse
         import flet.fastapi as flet_fastapi
 
         app = FastAPI(title="KESHAV AI by Keshav Batra")
@@ -291,13 +291,46 @@ if __name__ == "__main__":
                 "keep_alive": True,
             }
 
+        @app.get("/robots.txt", response_class=PlainTextResponse)
+        async def robots_txt():
+            return (
+                "User-agent: *\n"
+                "Allow: /\n"
+                "Sitemap: https://keshav-ai.onrender.com/sitemap.xml\n"
+            )
+
+        @app.get("/sitemap.xml", response_class=Response)
+        async def sitemap_xml():
+            xml_content = """<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://keshav-ai.onrender.com/</loc>
+    <lastmod>2026-11-10</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://keshav-ai.onrender.com/dictate</loc>
+    <lastmod>2026-11-10</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+</urlset>"""
+            return Response(content=xml_content, media_type="application/xml")
+
         @app.get("/dictate", response_class=HTMLResponse)
         async def dictate_page():
             dictate_path = os.path.join(os.path.dirname(__file__), "assets", "dictate.html")
             with open(dictate_path, "r", encoding="utf-8") as f:
                 return f.read()
 
-        flet_app = flet_fastapi.app(main, assets_dir="assets")
+        flet_app = flet_fastapi.app(
+            main,
+            assets_dir="assets",
+            app_name="KESHAV AI by Keshav Batra",
+            app_short_name="KESHAV AI",
+            app_description="KESHAV AI - Smart Cross-Platform AI Assistant developed by Keshav Batra with ChatGPT interface, voice dictation, and FLUX.1 image generation.",
+        )
         app.mount("/", flet_app)
 
         port = int(os.environ.get("PORT", 8550))
