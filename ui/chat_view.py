@@ -802,7 +802,7 @@ class ChatView(ft.Container):
                         text_align=ft.TextAlign.CENTER,
                     ),
                     ft.Text(
-                        "Works seamlessly on Mac, Windows, and mobile. Ask questions, attach code files, or speak aloud.",
+                        "Developed by Keshav Batra • Works seamlessly on iPhone, Android, and PC. Ask questions, attach files, or speak aloud.",
                         size=13,
                         color=self.theme["text_secondary"],
                         text_align=ft.TextAlign.CENTER,

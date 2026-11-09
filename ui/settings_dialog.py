@@ -10,7 +10,7 @@ from theme import get_theme_colors
 
 PERSONA_PROMPTS = {
     "Helpful Assistant": (
-        "You are KESHAV AI, an intelligent, helpful, and concise AI assistant. "
+        "You are KESHAV AI, an intelligent, helpful, and concise AI assistant developed by Keshav Batra. "
         "Keep responses structured, informative, and engaging. Use markdown for code."
     ),
     "Code Architect": (
@@ -289,6 +289,25 @@ class SettingsDialog:
                     ft.Divider(height=1, color=self.theme["border"]),
                     ft.Text("APPEARANCE", size=11, weight=ft.FontWeight.BOLD, color=self.theme["primary"]),
                     self.theme_switch,
+                    ft.Divider(height=1, color=self.theme["border"]),
+                    ft.Container(
+                        padding=ft.Padding(12, 10, 12, 10),
+                        border_radius=10,
+                        bgcolor=self.theme["surface_variant"],
+                        content=ft.Row(
+                            alignment=ft.MainAxisAlignment.CENTER,
+                            spacing=8,
+                            controls=[
+                                ft.Icon(ft.Icons.VERIFIED_ROUNDED, size=16, color=self.theme["primary"]),
+                                ft.Text(
+                                    "Developer: Keshav Batra",
+                                    size=12.5,
+                                    weight=ft.FontWeight.BOLD,
+                                    color=self.theme["text_primary"],
+                                ),
+                            ],
+                        ),
+                    ),
                 ],
             ),
         )

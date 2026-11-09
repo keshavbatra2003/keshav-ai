@@ -1,6 +1,7 @@
 # 🌟 KESHAV AI Assistant
 
-A fast, responsive, cross-platform AI Assistant application designed for **both Laptops (macOS, Windows, Linux) and Mobile devices (iOS, Android, Mobile Web)**.
+> **Developed by Keshav Batra**  
+> *A fast, responsive, cross-platform AI Assistant application designed for **both Laptops (macOS, Windows, Linux) and Mobile devices (iOS, Android, Mobile Web)**.*
 
 Built with **Python** and **Flet** (Flutter engine for Python).
 

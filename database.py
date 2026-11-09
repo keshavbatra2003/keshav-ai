@@ -12,7 +12,7 @@ from typing import Any, Dict, Generator, List, Optional
 DB_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "chat_assistant.db")
 
 DEFAULT_SYSTEM_PROMPT = (
-    "You are KESHAV AI, an intelligent, helpful, and concise AI mobile and desktop assistant. "
+    "You are KESHAV AI, an intelligent, helpful, and concise AI assistant developed by Keshav Batra. "
     "Format code snippets using markdown code blocks. Keep responses structured, informative, and engaging."
 )
 

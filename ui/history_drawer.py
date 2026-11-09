@@ -148,6 +148,23 @@ class HistorySidebar(ft.Container):
                     color=self.theme["text_muted"],
                 ),
                 self.session_list_view,
+                ft.Container(
+                    padding=ft.Padding(4, 10, 4, 4),
+                    border=ft.Border(top=ft.BorderSide(1, self.theme["border"])),
+                    content=ft.Row(
+                        alignment=ft.MainAxisAlignment.CENTER,
+                        spacing=6,
+                        controls=[
+                            ft.Icon(ft.Icons.CODE_ROUNDED, size=14, color=self.theme["primary"]),
+                            ft.Text(
+                                "Developed by Keshav Batra",
+                                size=11,
+                                color=self.theme["text_muted"],
+                                weight=ft.FontWeight.W_500,
+                            ),
+                        ],
+                    ),
+                ),
             ],
         )
 

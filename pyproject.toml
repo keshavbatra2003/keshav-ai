@@ -1,7 +1,10 @@
 [project]
 name = "keshav-ai"
 version = "1.0.0"
-description = "KESHAV AI - Smart Cross-Platform Assistant for Mac, Windows, and Mobile"
+description = "KESHAV AI - Smart Cross-Platform Assistant developed by Keshav Batra"
+authors = [
+    { name = "Keshav Batra", email = "keshavbatra2003@users.noreply.github.com" }
+]
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
@@ -10,10 +13,10 @@ dependencies = [
 ]
 
 [tool.flet]
-org = "org.keshav.ai"
+org = "com.keshavbatra"
 product = "KESHAV AI"
-company = "KESHAV AI Labs"
-copyright = "Copyright (C) 2026 KESHAV AI Labs"
+company = "Keshav Batra"
+copyright = "Copyright (C) 2026 Keshav Batra"
 permissions = ["microphone"]
 
 [tool.flet.macos]
