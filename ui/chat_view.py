@@ -272,12 +272,12 @@ class ChatView(ft.Container):
                         vertical_alignment=ft.CrossAxisAlignment.CENTER,
                         controls=[
                             ft.Row(
-                                spacing=8,
+                                spacing=6,
                                 vertical_alignment=ft.CrossAxisAlignment.CENTER,
                                 controls=[
-                                    ft.ProgressRing(width=13, height=13, stroke_width=2.2, color="#EF4444"),
+                                    ft.Icon(ft.Icons.MIC_ROUNDED, size=16, color=self.theme["primary"]),
                                     ft.Text(
-                                        "🎙️ Voice Dictation Active — Speak or tap quick phrases:",
+                                        "🎙️ Voice Typing: Tap your keyboard mic or choose a quick prompt:",
                                         size=11.5,
                                         weight=ft.FontWeight.W_600,
                                         color=self.theme["text_primary"],
@@ -297,10 +297,10 @@ class ChatView(ft.Container):
                         controls=voice_chips,
                     ),
                     ft.Text(
-                        "📱 Mobile Tip: You can also tap the microphone key (🎙️) on your phone keyboard to speak directly into this box!",
-                        size=10.5,
-                        color=self.theme["text_muted"],
-                        italic=True,
+                        "📱 Phone Tip: Tap the prompt box and press the 🎙️ mic key on your keyboard to speak with 100% accuracy!",
+                        size=11,
+                        color=self.theme["primary"],
+                        weight=ft.FontWeight.W_500,
                     ),
                 ],
             ),
@@ -442,10 +442,10 @@ class ChatView(ft.Container):
         async def _pick():
             try:
                 await self.file_picker.pick_files(
-                    dialog_title="Attach Code or Document",
+                    dialog_title="Attach Code, Document, or Audio Note",
                     allow_multiple=True,
                     with_data=True,
-                    allowed_extensions=["py", "txt", "md", "json", "js", "ts", "html", "css", "yaml", "yml", "csv", "sql", "sh"],
+                    allowed_extensions=["py", "txt", "md", "json", "js", "ts", "html", "css", "yaml", "yml", "csv", "sql", "sh", "mp3", "wav", "m4a", "ogg", "aac"],
                 )
             except Exception as err:
                 print("File picker error:", err)
@@ -539,13 +539,23 @@ class ChatView(ft.Container):
         self.inline_voice_bar.visible = self.is_voice_dictating
 
         if self.is_voice_dictating:
-            self.voice_btn.icon_color = "#EF4444"
-            self.voice_btn.tooltip = "Listening... Click to stop dictation"
-            self.text_input.hint_text = "🎙️ Listening... (Speak now or use phone keyboard mic)"
+            self.voice_btn.icon_color = self.theme["primary"]
+            self.voice_btn.tooltip = "Voice Prompts & Dictation Active"
+            self.text_input.hint_text = "🎙️ Tap the mic on your keyboard to dictate..."
             try:
-                asyncio.create_task(self.text_input.focus())
+                self.app_page.run_task(self.text_input.focus)
             except Exception:
                 pass
+            if self.is_mobile:
+                try:
+                    self.app_page.show_dialog(
+                        ft.SnackBar(
+                            content=ft.Text("🎙️ Tap the mic (🎙️) on your keyboard to speak live into the box!"),
+                            duration=3000,
+                        )
+                    )
+                except Exception:
+                    pass
         else:
             self.voice_btn.icon_color = self.theme["text_secondary"]
             self.voice_btn.tooltip = "Voice Dictation (Speech-to-Text)"
