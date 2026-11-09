@@ -313,7 +313,7 @@ class ChatView(ft.Container):
         self.image_btn = ft.IconButton(
             icon=ft.Icons.PALETTE_ROUNDED,
             icon_size=20,
-            icon_color=self.theme["primary"],
+            icon_color=self.theme["text_secondary"],
             tooltip="Generate AI Image with FLUX.1 (/image)",
             on_click=self._on_image_btn_click,
         )
@@ -322,7 +322,7 @@ class ChatView(ft.Container):
         self.voice_btn = ft.IconButton(
             icon=ft.Icons.MIC_ROUNDED,
             icon_size=20,
-            icon_color=self.theme["primary"],
+            icon_color=self.theme["text_secondary"],
             tooltip="Voice Dictation (Speech-to-Text)",
             url=f"/dictate?session_id={self.session_id}",
         )
@@ -853,9 +853,9 @@ class ChatView(ft.Container):
                         width=48,
                         height=48,
                         border_radius=24,
-                        bgcolor=self.theme["primary"],
+                        bgcolor="#FFFFFF" if self.is_dark else "#000000",
                         alignment=ft.Alignment(0, 0),
-                        content=ft.Icon(ft.Icons.AUTO_AWESOME_ROUNDED, size=24, color="#FFFFFF"),
+                        content=ft.Icon(ft.Icons.AUTO_AWESOME_ROUNDED, size=24, color="#000000" if self.is_dark else "#FFFFFF"),
                     ),
                     ft.Text(
                         "What can I help with?",

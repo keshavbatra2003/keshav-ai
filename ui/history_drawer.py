@@ -91,12 +91,10 @@ class HistorySidebar(ft.Container):
                         ft.Container(
                             width=32,
                             height=32,
-                            border_radius=8,
-                            gradient=ft.LinearGradient(
-                                colors=[self.theme["primary_gradient_start"], self.theme["primary_gradient_end"]]
-                            ),
+                            border_radius=16,
+                            bgcolor="#FFFFFF" if self.is_dark else "#000000",
                             alignment=ft.Alignment(0, 0),
-                            content=ft.Icon(ft.Icons.AUTO_AWESOME_ROUNDED, size=18, color="#FFFFFF"),
+                            content=ft.Icon(ft.Icons.AUTO_AWESOME_ROUNDED, size=16, color="#000000" if self.is_dark else "#FFFFFF"),
                         ),
                         ft.Text(
                             "KESHAV AI",
@@ -155,9 +153,9 @@ class HistorySidebar(ft.Container):
                                 width=32,
                                 height=32,
                                 border_radius=16,
-                                bgcolor=self.theme["primary"],
+                                bgcolor="#FFFFFF" if self.is_dark else "#000000",
                                 alignment=ft.Alignment(0, 0),
-                                content=ft.Text("KB", size=12, weight=ft.FontWeight.BOLD, color="#FFFFFF"),
+                                content=ft.Text("KB", size=12, weight=ft.FontWeight.BOLD, color="#000000" if self.is_dark else "#FFFFFF"),
                             ),
                             ft.Column(
                                 spacing=1,

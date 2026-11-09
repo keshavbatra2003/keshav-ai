@@ -105,9 +105,10 @@ class AssistantBubble(ft.Row):
             width=30,
             height=30,
             border_radius=15,
-            bgcolor="#10A37F",
+            bgcolor="#FFFFFF" if self.is_dark else "#000000",
+            border=ft.Border.all(1, "#383838" if self.is_dark else "#E5E5E5"),
             alignment=ft.Alignment(0, 0),
-            content=ft.Icon(ft.Icons.AUTO_AWESOME_ROUNDED, size=16, color="#FFFFFF"),
+            content=ft.Icon(ft.Icons.AUTO_AWESOME_ROUNDED, size=15, color="#000000" if self.is_dark else "#FFFFFF"),
         )
 
         bubble_container = ft.Container(
@@ -294,9 +295,10 @@ def create_thinking_bubble(is_dark: bool) -> ft.Control:
                 width=30,
                 height=30,
                 border_radius=15,
-                bgcolor="#10A37F",
+                bgcolor="#FFFFFF" if is_dark else "#000000",
+                border=ft.Border.all(1, "#383838" if is_dark else "#E5E5E5"),
                 alignment=ft.Alignment(0, 0),
-                content=ft.Icon(ft.Icons.AUTO_AWESOME_ROUNDED, size=16, color="#FFFFFF"),
+                content=ft.Icon(ft.Icons.AUTO_AWESOME_ROUNDED, size=15, color="#000000" if is_dark else "#FFFFFF"),
             ),
             ft.Container(
                 padding=ft.Padding(4, 4, 10, 4),
