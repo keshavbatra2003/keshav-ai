@@ -181,19 +181,30 @@ async def stream_gemini_api(
     messages: List[Dict[str, Any]],
     system_prompt: str,
     api_key: str,
-    model: str = "gemini-3.5-flash-lite",
+    model: str = "gemini-2.0-flash-lite",
 ) -> AsyncGenerator[str, None]:
     """Streams responses from Google Gemini API via streamGenerateContent SSE with automatic high-demand failover."""
     if not api_key:
         raise ValueError("Google Gemini API key is missing. Please add it in Settings.")
 
-    # Sanitize model name (remove legacy 'gemini-1.5' or 404 models)
-    if not model or model.startswith("gemini-1.5") or model.startswith("gemini-2.5"):
-        model = "gemini-3.5-flash-lite"
+    # Sanitize model name — map legacy/fictional names to real Google models
+    legacy_map = {
+        "gemini-3.5-flash-lite": "gemini-2.0-flash-lite",
+        "gemini-3.5-flash": "gemini-2.0-flash",
+        "gemini-3.6-flash": "gemini-2.0-flash",
+        "gemini-3.1-pro-preview": "gemini-2.5-pro-preview-05-06",
+        "gemini-flash-latest": "gemini-2.0-flash",
+    }
+    if not model:
+        model = "gemini-2.0-flash-lite"
+    elif model in legacy_map:
+        model = legacy_map[model]
+    elif model.startswith("gemini-1.5"):
+        model = "gemini-2.0-flash"
 
     # Multi-model resilience chain: if a model encounters a 503 high-demand spike, auto-switch
     models_to_try = [model]
-    for fallback in ["gemini-3.5-flash-lite", "gemini-3.5-flash", "gemini-3.6-flash"]:
+    for fallback in ["gemini-2.0-flash-lite", "gemini-2.0-flash", "gemini-1.5-flash"]:
         if fallback not in models_to_try:
             models_to_try.append(fallback)
 
@@ -228,7 +239,7 @@ async def stream_gemini_api(
                         if idx < len(models_to_try) - 1:
                             await asyncio.sleep(0.5)
                             continue
-                        raise RuntimeError("Google's Gemini model is currently experiencing temporary high demand. Please try again in a few moments.")
+                        raise RuntimeError("Google's Gemini API is temporarily unavailable due to high demand. Please try again in a few moments, or switch to ChatGPT / Claude in the model switcher.")
                     elif response.status_code != 200:
                         err_text = await response.aread()
                         last_error = f"Gemini API Error ({response.status_code}): {err_text.decode('utf-8', errors='ignore')}"

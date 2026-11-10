@@ -21,7 +21,7 @@ DEFAULT_SYSTEM_PROMPT = (
 DEFAULT_SETTINGS = {
     "provider": "gemini",  # "gemini", "openai", "claude", "demo"
     "gemini_api_key": "",
-    "gemini_model": "gemini-3.5-flash-lite",
+    "gemini_model": "gemini-2.0-flash-lite",
     "openai_api_key": "",
     "openai_base_url": "https://api.openai.com/v1",
     "openai_model": "gpt-4o",
@@ -117,8 +117,8 @@ def get_all_settings() -> Dict[str, str]:
             cursor.execute("UPDATE settings SET value = ? WHERE key = 'system_prompt'", (DEFAULT_SYSTEM_PROMPT,))
             conn.commit()
         
-        # Guard: If Gemini API key is configured, ensure provider is always 'gemini' unless 'openai'
-        if settings.get("gemini_api_key", "").strip() and settings.get("provider") != "openai":
+        # Guard: If Gemini API key is configured, only default to 'gemini' if no other provider has been explicitly chosen
+        if settings.get("gemini_api_key", "").strip() and settings.get("provider") not in ("openai", "chatgpt", "claude", "anthropic", "demo"):
             settings["provider"] = "gemini"
 
         return settings

@@ -747,7 +747,7 @@ class ChatView(ft.Container):
                 self.model_badge_text.value = "⚡ Demo ▾"
         else:
             if prov == "gemini":
-                m = settings.get("gemini_model", "gemini-3.5-flash-lite")
+                m = settings.get("gemini_model", "gemini-2.0-flash-lite")
                 self.model_badge_text.value = f"✨ Gemini ({m}) ▾"
             elif prov in ("openai", "chatgpt"):
                 m = settings.get("openai_model", "gpt-4o")
@@ -822,8 +822,8 @@ class ChatView(ft.Container):
             )
 
         cards = [
-            make_model_card("Google Gemini 3.5 Flash Lite", "Ultra-fast Google AI • Active Default", "gemini", "gemini-3.5-flash-lite", "#4285F4"),
-            make_model_card("Google Gemini 3.5 Flash", "Standard Google AI Frontier Model", "gemini", "gemini-3.5-flash", "#4285F4"),
+            make_model_card("Google Gemini 2.0 Flash Lite", "Ultra-fast Google AI • Active Default", "gemini", "gemini-2.0-flash-lite", "#4285F4"),
+            make_model_card("Google Gemini 2.0 Flash", "Standard Google AI Model", "gemini", "gemini-2.0-flash", "#4285F4"),
             make_model_card("ChatGPT (GPT-4o)", "OpenAI flagship intelligence • Free & Fast", "openai", "gpt-4o", "#10A37F"),
             make_model_card("ChatGPT (GPT-4o Mini)", "Lightweight, fast ChatGPT engine", "openai", "gpt-4o-mini", "#10A37F"),
             make_model_card("Anthropic Claude 3.5 Sonnet", "Anthropic's frontier coding & reasoning model", "claude", "claude-3-5-sonnet-20241022", "#D97706"),
@@ -880,7 +880,7 @@ class ChatView(ft.Container):
             prov = settings.get("provider", "demo")
             model_tag = "Demo"
             if prov == "gemini":
-                model_tag = settings.get("gemini_model", "gemini-3.5-flash-lite")
+                model_tag = settings.get("gemini_model", "gemini-2.0-flash-lite")
             elif prov == "openai":
                 model_tag = settings.get("openai_model", "gpt-4o-mini")
 
@@ -1260,7 +1260,7 @@ class ChatView(ft.Container):
         prov = settings.get("provider", "demo")
         model_tag = "Demo"
         if prov == "gemini":
-            model_tag = settings.get("gemini_model", "gemini-3.5-flash-lite")
+            model_tag = settings.get("gemini_model", "gemini-2.0-flash-lite")
             if not settings.get("gemini_api_key", "").strip():
                 full_text = (
                     "⚠️ **Google Gemini API Key Needed to Go Online**\n\n"
