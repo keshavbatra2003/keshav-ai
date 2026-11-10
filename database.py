@@ -351,3 +351,7 @@ def get_or_create_initial_session(client_id: Optional[str] = None) -> str:
         if s.get("message_count", 0) == 0:
             return s["id"]
     return create_session(title="New Chat", client_id=cid)
+
+
+# Automatically initialize schema on module import
+init_db()
