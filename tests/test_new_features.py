@@ -32,6 +32,16 @@ class TestNewFeatures(unittest.TestCase):
 
         self.client = TestClient(self.app)
 
+    def test_video_request_detection(self):
+        self.assertTrue(ai_service.is_video_request("/video futuristic cyber car"))
+        self.assertTrue(ai_service.is_video_request("/animate glowing mandala"))
+        self.assertTrue(ai_service.is_video_request("can you create a video of rain in Tokyo?"))
+        self.assertFalse(ai_service.is_video_request("tell me about the history of video"))
+
+    def test_extract_video_prompt(self):
+        p = ai_service.extract_video_prompt("/video flying sports car")
+        self.assertEqual(p, "flying sports car")
+
     def test_search_request_detection(self):
         self.assertTrue(ai_service.is_search_request("/search latest AI news"))
         self.assertTrue(ai_service.is_search_request("/web python 3.14 features"))

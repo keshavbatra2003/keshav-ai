@@ -954,10 +954,10 @@ class ChatView(ft.Container):
 
     def _build_empty_state(self) -> ft.Control:
         prompt_cards = [
+            ("🎬 Create Video", "Cinematic trailer & storyboard", "/video cinematic cybernetic sports car racing in neon Tokyo rain in 4K HDR"),
             ("🌐 Live Web Search", "Real-time AI news & facts", "/search latest artificial intelligence breakthroughs and news in 2026"),
             ("🎨 Generate Image", "Glowing cyber-mandala in 8K", "/image futuristic glowing cyber-mandala emblem with KB initials in 8k photorealistic metallic chrome"),
             ("💻 Code Python", "High-performance cache with TTL", "Write a clean, production-ready Python in-memory cache decorator with TTL and thread safety."),
-            ("📝 Executive Writing", "Partnership outreach proposal", "Draft a persuasive, professional partnership outreach email for an innovative AI collaboration."),
         ]
 
         card_controls = []

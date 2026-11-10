@@ -21,6 +21,12 @@ IMAGE_PREFIX_PATTERNS = [
     r"^\s*(?:imagine|show me an image of|show me a picture of)\b\s*",
 ]
 
+VIDEO_PREFIX_PATTERNS = [
+    r"^\s*/(?:video|animate|animation|make-video|generate-video|create-video)\b\s*",
+    r"^\s*(?:can you |could you |please )?(?:generate|create|make|produce|render)\s+(?:an?|the)?\s*(?:ai\s+)?(?:video|animation|clip|motion|short|reel)\s+(?:of|about|on)?\b\s*",
+    r"^\s*(?:make|create)\s+a\s+video\s+(?:of|about|on)?\b\s*",
+]
+
 SEARCH_PREFIX_PATTERNS = [
     r"^\s*/(?:search|web|browse|google|ddg|lookup)\b\s*",
     r"^\s*(?:can you |could you |please )?(?:search|browse|lookup|check)(?:\s+(?:the|for|on))?\s+web\s+(?:for|about)?\b\s*",
@@ -116,6 +122,65 @@ def get_flux_image_url(prompt: str, seed: Optional[int] = None, width: int = 102
     return f"https://image.pollinations.ai/prompt/{encoded}?width={width}&height={height}&seed={seed_val}&model=flux&nologo=true"
 
 
+def is_video_request(text: str) -> bool:
+    """Detects whether user prompt is asking to generate/create a video or animation."""
+    if not text:
+        return False
+    t = text.strip()
+    return any(re.search(pat, t, re.IGNORECASE) for pat in VIDEO_PREFIX_PATTERNS)
+
+
+def extract_video_prompt(text: str) -> str:
+    """Extracts the cinematic video concept from a video generation request."""
+    cleaned = text.strip()
+    for pat in VIDEO_PREFIX_PATTERNS:
+        match = re.search(pat, cleaned, re.IGNORECASE)
+        if match:
+            cleaned = cleaned[match.end():].strip()
+            break
+    cleaned = re.sub(r"[\.!\?]+$", "", cleaned).strip()
+    return cleaned if cleaned else text.strip()
+
+
+def format_video_production(prompt: str, keyframe_url: str) -> str:
+    """Formats a complete Hollywood-grade AI video production storyboard and prompts."""
+    escaped_prompt = prompt.replace("\n", " ").strip()
+    luma_url = "https://lumalabs.ai/dream-machine"
+    runway_url = "https://runwayml.com/"
+    kling_url = "https://klingai.com/"
+
+    return (
+        f"🎬 **KESHAV AI Video Creation Studio**\n\n"
+        f"**Concept:** *\"{escaped_prompt}\"*\n\n"
+        f"### 🖼️ Cinematic 16:9 Keyframe Preview:\n"
+        f"![{escaped_prompt}]({keyframe_url})\n\n"
+        f"[📥 **Click to Open / Download Full 16:9 4K Film Still**]({keyframe_url})\n\n"
+        f"---\n\n"
+        f"### 🎥 Scene-by-Scene Director's Storyboard:\n\n"
+        f"**Scene 1: Opening Shot (00:00 - 00:05)**\n"
+        f"- 📷 **Camera:** Wide cinematic drone pan, establishing depth and scale.\n"
+        f"- 💡 **Lighting & Atmosphere:** 35mm anamorphic lens, volumetric light rays, 4K HDR color tone.\n"
+        f"- 🎵 **Sound & Score:** Ambient rising synth tone with deep atmospheric reverb.\n\n"
+        f"**Scene 2: Core Action & Motion (00:05 - 00:15)**\n"
+        f"- 📷 **Camera:** Dynamic tracking orbit shot following: *\"{escaped_prompt}\"*.\n"
+        f"- ⚡ **Motion Dynamics:** Fluid high-speed motion, realistic wind and particle physics.\n"
+        f"- 🎙️ **Voiceover Narration:** *\"Every innovation begins as a vision in motion.\"*\n\n"
+        f"**Scene 3: Climax & Reveal (00:15 - 00:30)**\n"
+        f"- 📷 **Camera:** Slow-motion dolly zoom with dramatic lighting bloom.\n"
+        f"- 🎵 **Sound & Score:** Inspiring bass drop resolving into a powerful cinematic crescendo.\n\n"
+        f"---\n\n"
+        f"### 🚀 Ready-to-Render Video Engine Prompt:\n\n"
+        f"```text\n"
+        f"Cinematic 4K hyperrealistic footage of {escaped_prompt}, smooth tracking camera movement, 35mm lens, photorealistic textures, dynamic atmospheric lighting, 60fps ultra smooth motion, masterpiece\n"
+        f"```\n\n"
+        f"**Render with Top Free Video Engines:**\n"
+        f"- 🔗 [Render on **Luma Dream Machine** (Free Tier)]({luma_url})\n"
+        f"- 🔗 [Render on **Kling AI** (Free Daily Credits)]({kling_url})\n"
+        f"- 🔗 [Render on **Runway Gen-3**]({runway_url})\n\n"
+        f"> 💡 *Tip: Copy the prompt above and paste it directly into Luma or Kling to render the live motion MP4 clip for free!*"
+    )
+
+
 def format_image_markdown(prompt: str, image_url: str) -> str:
     """Formats markdown response containing rendered image and HD download link."""
     escaped_prompt = prompt.replace("\n", " ").strip()
@@ -135,6 +200,12 @@ class MockAIEngine:
     def generate_reply(messages: List[Dict[str, Any]], system_prompt: str) -> str:
         raw_last = messages[-1]["content"].strip() if messages else ""
         last_msg = raw_last.lower()
+
+        # AI Video Creation requests
+        if is_video_request(raw_last):
+            prompt = extract_video_prompt(raw_last)
+            url = get_flux_image_url(f"cinematic 16:9 movie still of {prompt}, 4k photorealistic film footage", width=1280, height=720)
+            return format_video_production(prompt, url)
 
         # AI Image Generation requests
         if is_image_request(raw_last):
@@ -455,8 +526,15 @@ async def stream_ai_response(
     settings: Dict[str, str],
 ) -> AsyncGenerator[str, None]:
     """Unified entrypoint for streaming AI responses based on selected provider."""
-    # Fast path for AI Image Generation requests across all providers
+    # Fast path for AI Video Creation requests across all providers
     raw_last = messages[-1]["content"].strip() if messages else ""
+    if is_video_request(raw_last):
+        prompt = extract_video_prompt(raw_last)
+        url = get_flux_image_url(f"cinematic 16:9 movie still of {prompt}, 4k photorealistic film footage", width=1280, height=720)
+        yield format_video_production(prompt, url)
+        return
+
+    # Fast path for AI Image Generation requests across all providers
     if is_image_request(raw_last):
         prompt = extract_image_prompt(raw_last)
         url = get_flux_image_url(prompt)
