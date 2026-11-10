@@ -21,7 +21,7 @@ DEFAULT_SYSTEM_PROMPT = (
 DEFAULT_SETTINGS = {
     "provider": "gemini",  # "gemini", "openai", "demo"
     "gemini_api_key": "",
-    "gemini_model": "gemini-3.5-flash",
+    "gemini_model": "gemini-3.5-flash-lite",
     "openai_api_key": "",
     "openai_base_url": "https://api.openai.com/v1",
     "openai_model": "gpt-4o-mini",

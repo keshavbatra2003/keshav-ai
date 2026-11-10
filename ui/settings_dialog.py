@@ -108,18 +108,18 @@ class SettingsDialog:
             helper="Current API key is securely managed on server and hidden from visitors.",
         )
 
-        current_gemini_model = self.settings.get("gemini_model", "gemini-3.5-flash")
+        current_gemini_model = self.settings.get("gemini_model", "gemini-3.5-flash-lite")
         if current_gemini_model.startswith("gemini-1.5") or current_gemini_model.startswith("gemini-2.5"):
-            current_gemini_model = "gemini-3.5-flash"
+            current_gemini_model = "gemini-3.5-flash-lite"
 
         self.gemini_model_dropdown = ft.Dropdown(
             label="Gemini Model",
             value=current_gemini_model,
             options=[
-                ft.dropdown.Option("gemini-3.5-flash", "Gemini 3.5 Flash (Fast & Recommended)"),
-                ft.dropdown.Option("gemini-3.8-flash", "Gemini 3.8 Flash (Latest Intelligent)"),
-                ft.dropdown.Option("gemini-flash-latest", "Gemini Flash Latest (Auto-Updated)"),
-                ft.dropdown.Option("gemini-3.5-flash-lite", "Gemini 3.5 Flash Lite (Lightweight)"),
+                ft.dropdown.Option("gemini-3.5-flash-lite", "Gemini 3.5 Flash Lite (Ultra-Fast & High Reliability)"),
+                ft.dropdown.Option("gemini-3.5-flash", "Gemini 3.5 Flash (Standard)"),
+                ft.dropdown.Option("gemini-3.6-flash", "Gemini 3.6 Flash (Fast)"),
+                ft.dropdown.Option("gemini-flash-latest", "Gemini Flash Latest"),
                 ft.dropdown.Option("gemini-3.1-pro-preview", "Gemini 3.1 Pro (Deep Reasoning)"),
             ],
             dense=True,

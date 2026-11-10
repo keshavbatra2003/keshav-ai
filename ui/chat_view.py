@@ -743,7 +743,7 @@ class ChatView(ft.Container):
                 self.model_badge_text.value = "⚡ Demo"
         else:
             if prov == "gemini":
-                m = settings.get("gemini_model", "gemini-3.5-flash")
+                m = settings.get("gemini_model", "gemini-3.5-flash-lite")
                 self.model_badge_text.value = f"Gemini ({m})"
             elif prov == "openai":
                 m = settings.get("openai_model", "gpt-4o-mini")
@@ -783,7 +783,7 @@ class ChatView(ft.Container):
             prov = settings.get("provider", "demo")
             model_tag = "Demo"
             if prov == "gemini":
-                model_tag = settings.get("gemini_model", "gemini-3.5-flash")
+                model_tag = settings.get("gemini_model", "gemini-3.5-flash-lite")
             elif prov == "openai":
                 model_tag = settings.get("openai_model", "gpt-4o-mini")
 
@@ -1093,7 +1093,7 @@ class ChatView(ft.Container):
         prov = settings.get("provider", "demo")
         model_tag = "Demo"
         if prov == "gemini":
-            model_tag = settings.get("gemini_model", "gemini-3.5-flash")
+            model_tag = settings.get("gemini_model", "gemini-3.5-flash-lite")
             if not settings.get("gemini_api_key", "").strip():
                 full_text = (
                     "⚠️ **Google Gemini API Key Needed to Go Online**\n\n"

@@ -181,17 +181,21 @@ async def stream_gemini_api(
     messages: List[Dict[str, Any]],
     system_prompt: str,
     api_key: str,
-    model: str = "gemini-3.5-flash",
+    model: str = "gemini-3.5-flash-lite",
 ) -> AsyncGenerator[str, None]:
-    """Streams responses from Google Gemini API via streamGenerateContent SSE."""
+    """Streams responses from Google Gemini API via streamGenerateContent SSE with automatic high-demand failover."""
     if not api_key:
         raise ValueError("Google Gemini API key is missing. Please add it in Settings.")
 
     # Sanitize model name (remove legacy 'gemini-1.5' or 404 models)
     if not model or model.startswith("gemini-1.5") or model.startswith("gemini-2.5"):
-        model = "gemini-3.5-flash"
+        model = "gemini-3.5-flash-lite"
 
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:streamGenerateContent?alt=sse&key={api_key}"
+    # Multi-model resilience chain: if a model encounters a 503 high-demand spike, auto-switch
+    models_to_try = [model]
+    for fallback in ["gemini-3.5-flash-lite", "gemini-3.5-flash", "gemini-3.6-flash"]:
+        if fallback not in models_to_try:
+            models_to_try.append(fallback)
 
     contents = []
     for msg in messages:
@@ -211,30 +215,53 @@ async def stream_gemini_api(
 
     headers = {"Content-Type": "application/json"}
     accumulated = ""
+    last_error = ""
 
     async with httpx.AsyncClient(timeout=60.0) as client:
-        async with client.stream("POST", url, json=payload, headers=headers) as response:
-            if response.status_code != 200:
-                err_text = await response.aread()
-                raise RuntimeError(f"Gemini API Error ({response.status_code}): {err_text.decode('utf-8', errors='ignore')}")
+        for idx, candidate_model in enumerate(models_to_try):
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{candidate_model}:streamGenerateContent?alt=sse&key={api_key}"
+            try:
+                async with client.stream("POST", url, json=payload, headers=headers) as response:
+                    if response.status_code in (503, 429):
+                        # High demand spike on candidate model, attempt fallback
+                        last_error = f"Gemini API model {candidate_model} is under high demand (503)."
+                        if idx < len(models_to_try) - 1:
+                            await asyncio.sleep(0.5)
+                            continue
+                        raise RuntimeError("Google's Gemini model is currently experiencing temporary high demand. Please try again in a few moments.")
+                    elif response.status_code != 200:
+                        err_text = await response.aread()
+                        last_error = f"Gemini API Error ({response.status_code}): {err_text.decode('utf-8', errors='ignore')}"
+                        if idx < len(models_to_try) - 1:
+                            continue
+                        raise RuntimeError(last_error)
 
-            async for line in response.aiter_lines():
-                line = line.strip()
-                if not line or not line.startswith("data: "):
+                    async for line in response.aiter_lines():
+                        line = line.strip()
+                        if not line or not line.startswith("data: "):
+                            continue
+                        json_str = line[6:].strip()
+                        try:
+                            data = json.loads(json_str)
+                            candidates = data.get("candidates", [])
+                            if candidates:
+                                parts = candidates[0].get("content", {}).get("parts", [])
+                                for part in parts:
+                                    text_piece = part.get("text", "")
+                                    if text_piece:
+                                        accumulated += text_piece
+                                        yield accumulated
+                        except json.JSONDecodeError:
+                            continue
+                    return
+            except httpx.RequestError as e:
+                last_error = f"Network connection error: {e}"
+                if idx < len(models_to_try) - 1:
                     continue
-                json_str = line[6:].strip()
-                try:
-                    data = json.loads(json_str)
-                    candidates = data.get("candidates", [])
-                    if candidates:
-                        parts = candidates[0].get("content", {}).get("parts", [])
-                        for part in parts:
-                            text_piece = part.get("text", "")
-                            if text_piece:
-                                accumulated += text_piece
-                                yield accumulated
-                except json.JSONDecodeError:
-                    continue
+                raise RuntimeError(last_error)
+
+    if not accumulated and last_error:
+        raise RuntimeError(last_error)
 
 
 async def stream_openai_api(
