@@ -52,8 +52,9 @@ class SettingsDialog:
             label="AI Inference Engine",
             value=current_provider,
             options=[
-                ft.dropdown.Option("gemini", "Google Gemini API (Free Tier Recommended)"),
-                ft.dropdown.Option("openai", "OpenAI / Groq / Ollama / Compatible API"),
+                ft.dropdown.Option("gemini", "Google Gemini (Gemini 3.5 Flash Lite)"),
+                ft.dropdown.Option("openai", "ChatGPT / OpenAI (GPT-4o, GPT-4o-mini)"),
+                ft.dropdown.Option("claude", "Anthropic Claude (Claude 3.5 Sonnet)"),
                 ft.dropdown.Option("demo", "Built-in Offline Engine (Simulated)"),
             ],
             dense=True,
@@ -211,6 +212,81 @@ class SettingsDialog:
             ],
         )
 
+        # Claude Controls
+        has_claude_key = bool(self.settings.get("claude_api_key", "").strip())
+        self.claude_status_card = ft.Container(
+            padding=ft.Padding(12, 10, 12, 10),
+            border_radius=10,
+            bgcolor=self.theme["surface_variant"],
+            border=ft.Border.all(1, "#10B981" if has_claude_key else self.theme["border"]),
+            content=ft.Row(
+                spacing=10,
+                controls=[
+                    ft.Icon(
+                        ft.Icons.LOCK_ROUNDED if has_claude_key else ft.Icons.KEY_OFF_ROUNDED,
+                        color="#10B981" if has_claude_key else self.theme["text_muted"],
+                        size=20,
+                    ),
+                    ft.Column(
+                        spacing=2,
+                        controls=[
+                            ft.Text(
+                                "Claude API Key: Connected & Protected" if has_claude_key else "No Claude API Key Configured",
+                                size=13,
+                                weight=ft.FontWeight.BOLD,
+                                color=self.theme["text_primary"],
+                            ),
+                            ft.Text(
+                                "•••••••••••••••••••• (Hidden for privacy & security)" if has_claude_key else "Provide an Anthropic API key to enable Claude",
+                                size=11,
+                                color="#10B981" if has_claude_key else self.theme["text_muted"],
+                            ),
+                        ],
+                    ),
+                ],
+            ),
+        )
+
+        self.claude_key_input = ft.TextField(
+            label="Anthropic Claude API Key (sk-ant-...)",
+            value="",
+            password=True,
+            can_reveal_password=False,
+            hint_text="Leave blank to keep existing key",
+            dense=True,
+            border=ft.OutlineInputBorder(border_radius=10),
+        )
+
+        current_claude_model = self.settings.get("claude_model", "claude-3-5-sonnet-20241022")
+        self.claude_model_dropdown = ft.Dropdown(
+            label="Claude Model",
+            value=current_claude_model,
+            options=[
+                ft.dropdown.Option("claude-3-5-sonnet-20241022", "Claude 3.5 Sonnet (Most Capable & Recommended)"),
+                ft.dropdown.Option("claude-3-5-haiku-20241022", "Claude 3.5 Haiku (Fast & Efficient)"),
+                ft.dropdown.Option("claude-3-opus-20240229", "Claude 3 Opus (Deep Analysis)"),
+            ],
+            dense=True,
+            border_radius=10,
+        )
+
+        get_claude_key_btn = ft.FilledTonalButton(
+            "Get Anthropic Claude Key",
+            icon=ft.Icons.OPEN_IN_NEW_ROUNDED,
+            url="https://console.anthropic.com/settings/keys",
+        )
+
+        self.claude_box = ft.Column(
+            spacing=10,
+            visible=(current_provider == "claude"),
+            controls=[
+                self.claude_status_card,
+                get_claude_key_btn,
+                self.claude_key_input,
+                self.claude_model_dropdown,
+            ],
+        )
+
         # Persona / System Instructions
         saved_persona = self.settings.get("persona", "Helpful Assistant")
         self.persona_dropdown = ft.Dropdown(
@@ -251,6 +327,7 @@ class SettingsDialog:
         prov = self.provider_dropdown.value
         self.gemini_box.visible = (prov == "gemini")
         self.openai_box.visible = (prov == "openai")
+        self.claude_box.visible = (prov == "claude")
         try:
             self.dialog_content.update()
         except Exception:
@@ -283,6 +360,7 @@ class SettingsDialog:
                     self.provider_dropdown,
                     self.gemini_box,
                     self.openai_box,
+                    self.claude_box,
                     ft.Divider(height=1, color=self.theme["border"]),
                     ft.Text("PERSONA & INSTRUCTIONS", size=11, weight=ft.FontWeight.BOLD, color=self.theme["primary"]),
                     self.persona_dropdown,
@@ -356,6 +434,12 @@ class SettingsDialog:
 
         database.set_setting("openai_base_url", self.openai_base_url_input.value.strip())
         database.set_setting("openai_model", self.openai_model_input.value.strip())
+
+        new_claude_key = self.claude_key_input.value.strip()
+        if new_claude_key:
+            database.set_setting("claude_api_key", new_claude_key)
+
+        database.set_setting("claude_model", self.claude_model_dropdown.value)
         database.set_setting("persona", self.persona_dropdown.value)
         database.set_setting("system_prompt", self.system_prompt_input.value.strip())
 

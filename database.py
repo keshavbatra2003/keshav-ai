@@ -19,12 +19,14 @@ DEFAULT_SYSTEM_PROMPT = (
 )
 
 DEFAULT_SETTINGS = {
-    "provider": "gemini",  # "gemini", "openai", "demo"
+    "provider": "gemini",  # "gemini", "openai", "claude", "demo"
     "gemini_api_key": "",
     "gemini_model": "gemini-3.5-flash-lite",
     "openai_api_key": "",
     "openai_base_url": "https://api.openai.com/v1",
-    "openai_model": "gpt-4o-mini",
+    "openai_model": "gpt-4o",
+    "claude_api_key": "",
+    "claude_model": "claude-3-5-sonnet-20241022",
     "system_prompt": DEFAULT_SYSTEM_PROMPT,
     "theme_mode": "dark",
     "persona": "Helpful Assistant",

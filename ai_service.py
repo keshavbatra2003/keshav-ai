@@ -269,9 +269,33 @@ async def stream_openai_api(
     system_prompt: str,
     api_key: str,
     base_url: str = "https://api.openai.com/v1",
-    model: str = "gpt-4o-mini",
+    model: str = "gpt-4o",
 ) -> AsyncGenerator[str, None]:
-    """Streams responses from OpenAI-compatible API via SSE stream: true."""
+    """Streams responses from OpenAI-compatible API or free ChatGPT gateway."""
+    # Fast path: If no custom key is provided, use free fast ChatGPT gateway
+    if not api_key:
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            resp = await client.post(
+                "https://text.pollinations.ai/",
+                json={
+                    "messages": [{"role": "system", "content": system_prompt}] + [
+                        {"role": m["role"], "content": m["content"]} for m in messages
+                    ],
+                    "model": "openai-fast",
+                },
+            )
+            if resp.status_code == 200:
+                text = resp.text.strip()
+                words = text.split(" ")
+                accumulated = ""
+                for i, w in enumerate(words):
+                    accumulated += (w + " " if i < len(words) - 1 else w)
+                    yield accumulated
+                    await asyncio.sleep(0.015)
+                return
+            else:
+                raise RuntimeError(f"ChatGPT free gateway returned {resp.status_code}")
+
     clean_base = base_url.rstrip("/")
     if not clean_base.endswith("/v1") and "ollama" not in clean_base and "groq" not in clean_base:
         url = f"{clean_base}/v1/chat/completions"
@@ -305,7 +329,7 @@ async def stream_openai_api(
         async with client.stream("POST", url, json=payload, headers=headers) as response:
             if response.status_code != 200:
                 err_text = await response.aread()
-                raise RuntimeError(f"API Error ({response.status_code}): {err_text.decode('utf-8', errors='ignore')}")
+                raise RuntimeError(f"OpenAI API Error ({response.status_code}): {err_text.decode('utf-8', errors='ignore')}")
 
             async for line in response.aiter_lines():
                 line = line.strip()
@@ -327,6 +351,67 @@ async def stream_openai_api(
                     continue
 
 
+async def stream_claude_api(
+    messages: List[Dict[str, Any]],
+    system_prompt: str,
+    api_key: str,
+    model: str = "claude-3-5-sonnet-20241022",
+) -> AsyncGenerator[str, None]:
+    """Streams responses from Anthropic Claude API via SSE."""
+    if not api_key:
+        raise ValueError(
+            "Anthropic Claude API key is missing.\n\n"
+            "Please paste your Anthropic key (`sk-ant-...`) in this chat box or in ⚙️ Settings."
+        )
+
+    url = "https://api.anthropic.com/v1/messages"
+
+    formatted_messages = []
+    for msg in messages:
+        formatted_messages.append({
+            "role": "user" if msg["role"] == "user" else "assistant",
+            "content": msg["content"],
+        })
+
+    payload: Dict[str, Any] = {
+        "model": model,
+        "max_tokens": 2048,
+        "messages": formatted_messages,
+        "stream": True,
+    }
+    if system_prompt:
+        payload["system"] = system_prompt
+
+    headers = {
+        "x-api-key": api_key,
+        "anthropic-version": "2023-06-01",
+        "Content-Type": "application/json",
+    }
+
+    accumulated = ""
+    async with httpx.AsyncClient(timeout=60.0) as client:
+        async with client.stream("POST", url, json=payload, headers=headers) as response:
+            if response.status_code != 200:
+                err_text = await response.aread()
+                raise RuntimeError(f"Claude API Error ({response.status_code}): {err_text.decode('utf-8', errors='ignore')}")
+
+            async for line in response.aiter_lines():
+                line = line.strip()
+                if not line or not line.startswith("data: "):
+                    continue
+                json_str = line[6:].strip()
+                try:
+                    data = json.loads(json_str)
+                    event_type = data.get("type", "")
+                    if event_type == "content_block_delta":
+                        text_piece = data.get("delta", {}).get("text", "")
+                        if text_piece:
+                            accumulated += text_piece
+                            yield accumulated
+                except json.JSONDecodeError:
+                    continue
+
+
 async def stream_ai_response(
     messages: List[Dict[str, Any]],
     settings: Dict[str, str],
@@ -340,20 +425,26 @@ async def stream_ai_response(
         yield format_image_markdown(prompt, url)
         return
 
-    provider = settings.get("provider", "demo").lower()
+    provider = settings.get("provider", "gemini").lower()
     system_prompt = settings.get("system_prompt", "")
 
     if provider == "gemini":
         api_key = settings.get("gemini_api_key", "").strip()
-        model = settings.get("gemini_model", "gemini-3.5-flash")
+        model = settings.get("gemini_model", "gemini-3.5-flash-lite")
         async for chunk in stream_gemini_api(messages, system_prompt, api_key, model):
             yield chunk
 
-    elif provider == "openai":
+    elif provider in ("openai", "chatgpt"):
         api_key = settings.get("openai_api_key", "").strip()
         base_url = settings.get("openai_base_url", "https://api.openai.com/v1").strip()
-        model = settings.get("openai_model", "gpt-4o-mini")
+        model = settings.get("openai_model", "gpt-4o")
         async for chunk in stream_openai_api(messages, system_prompt, api_key, base_url, model):
+            yield chunk
+
+    elif provider in ("claude", "anthropic"):
+        api_key = settings.get("claude_api_key", "").strip()
+        model = settings.get("claude_model", "claude-3-5-sonnet-20241022")
+        async for chunk in stream_claude_api(messages, system_prompt, api_key, model):
             yield chunk
 
     else:

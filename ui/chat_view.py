@@ -133,11 +133,13 @@ class ChatView(ft.Container):
             color=self.theme["badge_text"],
         )
         self.model_badge = ft.Container(
-            padding=ft.Padding(8, 4, 8, 4),
-            border_radius=8,
-            bgcolor=self.theme["badge_bg"],
+            padding=ft.Padding(10, 5, 10, 5),
+            border_radius=14,
+            bgcolor=self.theme["surface_variant"],
+            border=ft.Border.all(1, self.theme["border"]),
             content=self.model_badge_text,
-            tooltip="Current AI engine",
+            tooltip="Click to switch AI Model (Gemini, ChatGPT, Claude)",
+            on_click=lambda _: self._open_quick_model_switcher(),
         )
 
         # Menu button (for mobile drawer)
@@ -733,28 +735,123 @@ class ChatView(ft.Container):
 
     def update_model_badge(self):
         settings = database.get_all_settings()
-        prov = settings.get("provider", "demo")
+        prov = settings.get("provider", "gemini")
         if self.is_mobile:
             if prov == "gemini":
-                self.model_badge_text.value = "✨ Gemini"
-            elif prov == "openai":
-                self.model_badge_text.value = "✨ GPT-4o"
+                self.model_badge_text.value = "✨ Gemini ▾"
+            elif prov in ("openai", "chatgpt"):
+                self.model_badge_text.value = "🟢 ChatGPT ▾"
+            elif prov in ("claude", "anthropic"):
+                self.model_badge_text.value = "🟣 Claude ▾"
             else:
-                self.model_badge_text.value = "⚡ Demo"
+                self.model_badge_text.value = "⚡ Demo ▾"
         else:
             if prov == "gemini":
                 m = settings.get("gemini_model", "gemini-3.5-flash-lite")
-                self.model_badge_text.value = f"Gemini ({m})"
-            elif prov == "openai":
-                m = settings.get("openai_model", "gpt-4o-mini")
-                self.model_badge_text.value = f"OpenAI ({m})"
+                self.model_badge_text.value = f"✨ Gemini ({m}) ▾"
+            elif prov in ("openai", "chatgpt"):
+                m = settings.get("openai_model", "gpt-4o")
+                self.model_badge_text.value = f"🟢 ChatGPT ({m}) ▾"
+            elif prov in ("claude", "anthropic"):
+                m = settings.get("claude_model", "claude-3-5-sonnet")
+                short_m = "3.5-sonnet" if "sonnet" in m else ("3.5-haiku" if "haiku" in m else m)
+                self.model_badge_text.value = f"🟣 Claude ({short_m}) ▾"
             else:
-                self.model_badge_text.value = "⚡ Demo Engine"
+                self.model_badge_text.value = "⚡ Demo Engine ▾"
 
         try:
             self.model_badge.update()
         except RuntimeError:
             pass
+
+    def _open_quick_model_switcher(self):
+        settings = database.get_all_settings()
+        curr_prov = settings.get("provider", "gemini")
+
+        def choose_model(p: str, m: str):
+            database.set_setting("provider", p)
+            if p == "gemini":
+                database.set_setting("gemini_model", m)
+            elif p in ("openai", "chatgpt"):
+                database.set_setting("openai_model", m)
+            elif p in ("claude", "anthropic"):
+                database.set_setting("claude_model", m)
+            self.page.pop_dialog()
+            self.update_model_badge()
+
+        def make_model_card(title: str, subtitle: str, p: str, m: str, icon_color: str):
+            is_selected = (curr_prov == p)
+            return ft.Container(
+                padding=ft.Padding(12, 10, 12, 10),
+                border_radius=12,
+                bgcolor=self.theme["surface_variant"] if is_selected else "transparent",
+                border=ft.Border.all(1.5 if is_selected else 1, self.theme["primary"] if is_selected else self.theme["border"]),
+                ink=True,
+                on_click=lambda _: choose_model(p, m),
+                content=ft.Row(
+                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                    vertical_alignment=ft.CrossAxisAlignment.CENTER,
+                    controls=[
+                        ft.Row(
+                            spacing=10,
+                            vertical_alignment=ft.CrossAxisAlignment.CENTER,
+                            controls=[
+                                ft.Container(
+                                    width=10,
+                                    height=10,
+                                    border_radius=5,
+                                    bgcolor=icon_color,
+                                ),
+                                ft.Column(
+                                    spacing=2,
+                                    tight=True,
+                                    controls=[
+                                        ft.Text(title, size=13.5, weight=ft.FontWeight.BOLD, color=self.theme["text_primary"]),
+                                        ft.Text(subtitle, size=11, color=self.theme["text_muted"]),
+                                    ],
+                                ),
+                            ],
+                        ),
+                        ft.Icon(
+                            ft.Icons.CHECK_CIRCLE_ROUNDED if is_selected else ft.Icons.RADIO_BUTTON_UNCHECKED_ROUNDED,
+                            size=18,
+                            color=self.theme["primary"] if is_selected else self.theme["text_muted"],
+                        ),
+                    ],
+                ),
+            )
+
+        cards = [
+            make_model_card("Google Gemini 3.5 Flash Lite", "Ultra-fast Google AI • Active Default", "gemini", "gemini-3.5-flash-lite", "#4285F4"),
+            make_model_card("Google Gemini 3.5 Flash", "Standard Google AI Frontier Model", "gemini", "gemini-3.5-flash", "#4285F4"),
+            make_model_card("ChatGPT (GPT-4o)", "OpenAI flagship intelligence • Free & Fast", "openai", "gpt-4o", "#10A37F"),
+            make_model_card("ChatGPT (GPT-4o Mini)", "Lightweight, fast ChatGPT engine", "openai", "gpt-4o-mini", "#10A37F"),
+            make_model_card("Anthropic Claude 3.5 Sonnet", "Anthropic's frontier coding & reasoning model", "claude", "claude-3-5-sonnet-20241022", "#D97706"),
+            make_model_card("Anthropic Claude 3.5 Haiku", "High-speed, agile Claude model", "claude", "claude-3-5-haiku-20241022", "#D97706"),
+        ]
+
+        dialog = ft.AlertDialog(
+            title=ft.Row(
+                spacing=8,
+                vertical_alignment=ft.CrossAxisAlignment.CENTER,
+                controls=[
+                    ft.Icon(ft.Icons.TUNE_ROUNDED, size=20, color=self.theme["primary"]),
+                    ft.Text("Switch AI Model", size=17, weight=ft.FontWeight.BOLD),
+                ],
+            ),
+            content=ft.Container(
+                width=420,
+                content=ft.Column(
+                    spacing=8,
+                    tight=True,
+                    controls=cards,
+                ),
+            ),
+            actions=[
+                ft.TextButton("Close", on_click=lambda _: self.page.pop_dialog()),
+            ],
+        )
+        self.page.show_dialog(dialog)
 
     def load_session(self, session_id: str):
         self.session_id = session_id
@@ -983,6 +1080,76 @@ class ChatView(ft.Container):
                 pass
             return
 
+        # Auto-detect if user pasted an Anthropic Claude API key into the chat
+        if text.startswith("sk-ant-") and len(text) >= 30:
+            database.set_setting("claude_api_key", text)
+            database.set_setting("provider", "claude")
+            self.update_model_badge()
+
+            user_msg = database.add_message(self.session_id, "user", "[Configured Claude API Key]")
+            user_bubble = create_user_bubble(
+                content="Configured Claude API Key: •••••••••••••••••••• (Key Activated & Secured)",
+                timestamp=user_msg["created_at"],
+                is_dark=self.is_dark,
+            )
+            self.messages_list.controls.append(user_bubble)
+
+            asst_text = (
+                "🎉 **Anthropic Claude API Key Activated!**\n\n"
+                "KESHAV AI is now connected to **Anthropic Claude 3.5 Sonnet**.\n\n"
+                "You can now enjoy deep reasoning, architectural design, and state-of-the-art coding assistance!"
+            )
+            asst_msg = database.add_message(self.session_id, "assistant", asst_text)
+            asst_bubble = create_assistant_bubble(
+                content=asst_text,
+                timestamp=asst_msg["created_at"],
+                is_dark=self.is_dark,
+                on_copy=self._copy_to_clipboard,
+                on_speak=self._speak_message,
+                model_name="Claude Online",
+            )
+            self.messages_list.controls.append(asst_bubble)
+            try:
+                self.messages_list.update()
+            except RuntimeError:
+                pass
+            return
+
+        # Auto-detect if user pasted an OpenAI API key into the chat
+        if (text.startswith("sk-proj-") or (text.startswith("sk-") and not text.startswith("sk-ant-"))) and len(text) >= 30:
+            database.set_setting("openai_api_key", text)
+            database.set_setting("provider", "openai")
+            self.update_model_badge()
+
+            user_msg = database.add_message(self.session_id, "user", "[Configured OpenAI API Key]")
+            user_bubble = create_user_bubble(
+                content="Configured OpenAI API Key: •••••••••••••••••••• (Key Activated & Secured)",
+                timestamp=user_msg["created_at"],
+                is_dark=self.is_dark,
+            )
+            self.messages_list.controls.append(user_bubble)
+
+            asst_text = (
+                "🎉 **OpenAI ChatGPT API Key Activated!**\n\n"
+                "KESHAV AI is now connected to **ChatGPT (GPT-4o)**.\n\n"
+                "You can now chat directly with OpenAI's flagship intelligence!"
+            )
+            asst_msg = database.add_message(self.session_id, "assistant", asst_text)
+            asst_bubble = create_assistant_bubble(
+                content=asst_text,
+                timestamp=asst_msg["created_at"],
+                is_dark=self.is_dark,
+                on_copy=self._copy_to_clipboard,
+                on_speak=self._speak_message,
+                model_name="ChatGPT Online",
+            )
+            self.messages_list.controls.append(asst_bubble)
+            try:
+                self.messages_list.update()
+            except RuntimeError:
+                pass
+            return
+
         # Build prompt context if files are attached
         attachment_names = []
         full_content_for_ai = text
@@ -1127,8 +1294,42 @@ class ChatView(ft.Container):
                 except RuntimeError:
                     pass
                 return
-        elif prov == "openai":
-            model_tag = settings.get("openai_model", "gpt-4o-mini")
+        elif prov in ("openai", "chatgpt"):
+            model_tag = settings.get("openai_model", "gpt-4o")
+        elif prov in ("claude", "anthropic"):
+            model_tag = settings.get("claude_model", "claude-3-5-sonnet")
+            if not settings.get("claude_api_key", "").strip():
+                full_text = (
+                    "⚠️ **Anthropic Claude API Key Needed**\n\n"
+                    "To chat with Claude 3.5 Sonnet:\n\n"
+                    "1. Get your API key from **[https://console.anthropic.com/settings/keys](https://console.anthropic.com/settings/keys)**.\n"
+                    "2. **Paste your key (`sk-ant-...`) directly into this chat box** or enter it in **⚙️ Settings**!\n\n"
+                    "KESHAV AI will immediately activate Claude for this chat."
+                )
+                assistant_bubble = AssistantBubble(
+                    content=full_text,
+                    timestamp=datetime.now().isoformat(),
+                    is_dark=self.is_dark,
+                    on_copy=self._copy_to_clipboard,
+                    on_speak=self._speak_message,
+                    model_name="Claude Setup",
+                )
+                if thinking_bubble in self.messages_list.controls:
+                    self.messages_list.controls.remove(thinking_bubble)
+                self.messages_list.controls.append(assistant_bubble)
+                database.add_message(self.session_id, "assistant", full_text)
+                try:
+                    self.messages_list.update()
+                except RuntimeError:
+                    pass
+                self.is_generating = False
+                self.send_icon.visible = True
+                self.send_spinner.visible = False
+                try:
+                    self.send_btn.update()
+                except RuntimeError:
+                    pass
+                return
 
         assistant_bubble: Optional[AssistantBubble] = None
         full_text = ""

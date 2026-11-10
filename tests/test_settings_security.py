@@ -59,6 +59,13 @@ class TestSettingsSecurity(unittest.TestCase):
         page = MockSettingsPage()
         dialog = SettingsDialog(page=page, is_dark=True, on_settings_saved=lambda s: None)
 
+        dialog.gemini_key_input.value = "BRAND_NEW_VALID_KEY_777"
+        dialog.claude_key_input.value = "sk-ant-test-key-12345"
+        dialog._save()
+
+        self.assertEqual(database.get_setting("gemini_api_key"), "BRAND_NEW_VALID_KEY_777")
+        self.assertEqual(database.get_setting("claude_api_key"), "sk-ant-test-key-12345")
+
         dialog.gemini_key_input.value = "mock_updated_key_test_value"
         dialog._save()
 
