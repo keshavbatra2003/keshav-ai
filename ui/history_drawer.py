@@ -211,21 +211,19 @@ class HistorySidebar(ft.Container):
         self.refresh_sessions()
 
     def refresh_sessions(self):
-        sessions = database.get_sessions(client_id=self.client_id)
+        if self.search_query:
+            sessions = database.search_sessions(self.search_query, client_id=self.client_id)
+        else:
+            sessions = database.get_sessions(client_id=self.client_id)
         self.session_list_view.controls.clear()
 
-        filtered_sessions = [
-            s for s in sessions
-            if not self.search_query or self.search_query in s["title"].lower()
-        ]
-
-        if not filtered_sessions:
+        if not sessions:
             self.session_list_view.controls.append(
                 ft.Container(
                     padding=ft.Padding(0, 24, 0, 0),
                     alignment=ft.Alignment(0, 0),
                     content=ft.Text(
-                        "No chats found" if self.search_query else "No past chats yet",
+                        f"No chats matching '{self.search_query}'" if self.search_query else "No past chats yet",
                         size=12,
                         color=self.theme["text_muted"],
                         italic=True,
@@ -233,7 +231,7 @@ class HistorySidebar(ft.Container):
                 )
             )
         else:
-            for s in filtered_sessions:
+            for s in sessions:
                 is_active = (s["id"] == self.current_session_id)
                 msg_count = s.get("message_count", 0)
 

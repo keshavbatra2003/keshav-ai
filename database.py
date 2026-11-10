@@ -202,6 +202,46 @@ def get_sessions(client_id: Optional[str] = None) -> List[Dict[str, Any]]:
         return [dict(row) for row in rows]
 
 
+def search_sessions(query: str, client_id: Optional[str] = None) -> List[Dict[str, Any]]:
+    """Searches chat sessions by title AND message content, strictly scoped to client_id."""
+    clean_query = query.strip()
+    if not clean_query:
+        return get_sessions(client_id=client_id)
+
+    pattern = f"%{clean_query}%"
+    with get_db() as conn:
+        cursor = conn.cursor()
+        if client_id is not None:
+            cursor.execute(
+                """
+                SELECT DISTINCT s.id, s.title, s.created_at, s.updated_at, s.client_id,
+                       (SELECT COUNT(*) FROM messages m WHERE m.session_id = s.id) AS message_count,
+                       (SELECT content FROM messages m WHERE m.session_id = s.id ORDER BY created_at DESC LIMIT 1) AS last_message
+                FROM sessions s
+                LEFT JOIN messages m ON m.session_id = s.id
+                WHERE s.client_id = ?
+                  AND (s.title LIKE ? OR m.content LIKE ?)
+                ORDER BY s.updated_at DESC
+                """,
+                (client_id, pattern, pattern),
+            )
+        else:
+            cursor.execute(
+                """
+                SELECT DISTINCT s.id, s.title, s.created_at, s.updated_at, s.client_id,
+                       (SELECT COUNT(*) FROM messages m WHERE m.session_id = s.id) AS message_count,
+                       (SELECT content FROM messages m WHERE m.session_id = s.id ORDER BY created_at DESC LIMIT 1) AS last_message
+                FROM sessions s
+                LEFT JOIN messages m ON m.session_id = s.id
+                WHERE (s.title LIKE ? OR m.content LIKE ?)
+                ORDER BY s.updated_at DESC
+                """,
+                (pattern, pattern),
+            )
+        rows = cursor.fetchall()
+        return [dict(row) for row in rows]
+
+
 def get_session(session_id: str) -> Optional[Dict[str, Any]]:
     with get_db() as conn:
         cursor = conn.cursor()
@@ -300,6 +340,10 @@ def delete_messages_after(session_id: str, message_id: str):
 
 
 def get_or_create_initial_session(client_id: Optional[str] = None) -> str:
-    """Always starts a fresh, private new chat for every new visitor / connection."""
+    """Returns an empty 'New Chat' session if one already exists for this client, otherwise creates one."""
     cid = client_id or "default"
+    existing = get_sessions(client_id=cid)
+    for s in existing:
+        if s.get("message_count", 0) == 0:
+            return s["id"]
     return create_session(title="New Chat", client_id=cid)

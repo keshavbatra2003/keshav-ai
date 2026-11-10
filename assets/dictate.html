@@ -785,6 +785,10 @@
             if (currentSessionId) {
                 targetUrl += "&session_id=" + encodeURIComponent(currentSessionId);
             }
+            const uid = localStorage.getItem("keshav_ai_uid");
+            if (uid) {
+                targetUrl += "&uid=" + encodeURIComponent(uid);
+            }
 
             window.location.href = targetUrl;
         }
@@ -792,8 +796,16 @@
         function goBackToChat() {
             stopRecognition();
             let targetUrl = "/";
+            const params = [];
             if (currentSessionId) {
-                targetUrl += "?session_id=" + encodeURIComponent(currentSessionId);
+                params.push("session_id=" + encodeURIComponent(currentSessionId));
+            }
+            const uid = localStorage.getItem("keshav_ai_uid");
+            if (uid) {
+                params.push("uid=" + encodeURIComponent(uid));
+            }
+            if (params.length > 0) {
+                targetUrl += "?" + params.join("&");
             }
             window.location.href = targetUrl;
         }

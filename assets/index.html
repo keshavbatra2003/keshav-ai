@@ -35,6 +35,30 @@
   <title>KESHAV AI by Keshav Batra</title>
   <link rel="manifest" href="manifest.json">
 
+  <!-- Persistent Private User Device Identifier for Chat History Isolation -->
+  <script>
+    (function() {
+      try {
+        var params = new URLSearchParams(window.location.search);
+        var uid = params.get("uid");
+        if (!uid) {
+          uid = localStorage.getItem("keshav_ai_uid");
+          if (!uid) {
+            uid = "u_" + Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
+            localStorage.setItem("keshav_ai_uid", uid);
+          }
+          params.set("uid", uid);
+          var newUrl = window.location.pathname + "?" + params.toString() + window.location.hash;
+          window.location.replace(newUrl);
+        } else {
+          localStorage.setItem("keshav_ai_uid", uid);
+        }
+      } catch (err) {
+        console.error("User isolation setup error:", err);
+      }
+    })();
+  </script>
+
   <script>
     // Reload when WebKit restores the page from the back/forward cache instead
     // of resuming it. WebKit restores a Flutter app with its frame scheduling

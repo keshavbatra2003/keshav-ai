@@ -25,13 +25,17 @@ def main(page: ft.Page):
     # Every time a user opens or refreshes the link, they get their own isolated chat session
     # and cannot see conversations created by anyone else.
     database.init_db()
-    client_id = str(uuid.uuid4())
-
-    # Read query parameters (e.g. from /dictate speech recognition redirect)
+    # Read query parameters (e.g. from /dictate speech recognition or persistent uid)
     url_params = page.query.to_dict if hasattr(page, "query") and page.query else {}
     url_prompt = url_params.get("prompt", "").strip()
     url_session = url_params.get("session_id", "").strip()
     auto_send = (url_params.get("auto_send", "") == "1")
+
+    # Persistent client identifier for chat history isolation across visits
+    # Each browser device maintains its unique user ID, allowing users to see their own past chats while keeping chats 100% private from others
+    client_id = url_params.get("uid", "").strip()
+    if not client_id:
+        client_id = "default_user"
 
     if url_session and database.get_session(url_session):
         current_session_id = url_session
