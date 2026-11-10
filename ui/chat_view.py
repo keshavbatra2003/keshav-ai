@@ -138,7 +138,7 @@ class ChatView(ft.Container):
             bgcolor=self.theme["surface_variant"],
             border=ft.Border.all(1, self.theme["border"]),
             content=self.model_badge_text,
-            tooltip="Click to switch AI Model (Gemini, ChatGPT, Claude)",
+            tooltip="Click to switch AI Model (Gemini, ChatGPT)",
             on_click=lambda _: self._open_quick_model_switcher(),
         )
 
@@ -741,8 +741,6 @@ class ChatView(ft.Container):
                 self.model_badge_text.value = "✨ Gemini ▾"
             elif prov in ("openai", "chatgpt"):
                 self.model_badge_text.value = "🟢 ChatGPT ▾"
-            elif prov in ("claude", "anthropic"):
-                self.model_badge_text.value = "🟣 Claude ▾"
             else:
                 self.model_badge_text.value = "⚡ Demo ▾"
         else:
@@ -752,10 +750,6 @@ class ChatView(ft.Container):
             elif prov in ("openai", "chatgpt"):
                 m = settings.get("openai_model", "gpt-4o")
                 self.model_badge_text.value = f"🟢 ChatGPT ({m}) ▾"
-            elif prov in ("claude", "anthropic"):
-                m = settings.get("claude_model", "claude-3-5-sonnet")
-                short_m = "3.5-sonnet" if "sonnet" in m else ("3.5-haiku" if "haiku" in m else m)
-                self.model_badge_text.value = f"🟣 Claude ({short_m}) ▾"
             else:
                 self.model_badge_text.value = "⚡ Demo Engine ▾"
 
@@ -774,8 +768,6 @@ class ChatView(ft.Container):
                 database.set_setting("gemini_model", m)
             elif p in ("openai", "chatgpt"):
                 database.set_setting("openai_model", m)
-            elif p in ("claude", "anthropic"):
-                database.set_setting("claude_model", m)
             self.page.pop_dialog()
             self.update_model_badge()
 
@@ -822,12 +814,10 @@ class ChatView(ft.Container):
             )
 
         cards = [
-            make_model_card("Google Gemini 2.0 Flash Lite", "Ultra-fast Google AI • Active Default", "gemini", "gemini-2.0-flash-lite", "#4285F4"),
-            make_model_card("Google Gemini 2.0 Flash", "Standard Google AI Model", "gemini", "gemini-2.0-flash", "#4285F4"),
-            make_model_card("ChatGPT (GPT-4o)", "OpenAI flagship intelligence • Free & Fast", "openai", "gpt-4o", "#10A37F"),
-            make_model_card("ChatGPT (GPT-4o Mini)", "Lightweight, fast ChatGPT engine", "openai", "gpt-4o-mini", "#10A37F"),
-            make_model_card("Anthropic Claude 3.5 Sonnet", "Anthropic's frontier coding & reasoning model", "claude", "claude-3-5-sonnet-20241022", "#D97706"),
-            make_model_card("Anthropic Claude 3.5 Haiku", "High-speed, agile Claude model", "claude", "claude-3-5-haiku-20241022", "#D97706"),
+            make_model_card("Google Gemini 2.0 Flash Lite", "Ultra-fast Google AI • Free Forever", "gemini", "gemini-2.0-flash-lite", "#4285F4"),
+            make_model_card("Google Gemini 2.0 Flash", "Standard Google AI Model • Free Forever", "gemini", "gemini-2.0-flash", "#4285F4"),
+            make_model_card("ChatGPT (GPT-4o)", "OpenAI flagship intelligence • Free & No Key Needed", "openai", "gpt-4o", "#10A37F"),
+            make_model_card("ChatGPT (GPT-4o Mini)", "Lightweight, ultra-fast ChatGPT engine • Free", "openai", "gpt-4o-mini", "#10A37F"),
         ]
 
         dialog = ft.AlertDialog(
@@ -1080,43 +1070,8 @@ class ChatView(ft.Container):
                 pass
             return
 
-        # Auto-detect if user pasted an Anthropic Claude API key into the chat
-        if text.startswith("sk-ant-") and len(text) >= 30:
-            database.set_setting("claude_api_key", text)
-            database.set_setting("provider", "claude")
-            self.update_model_badge()
-
-            user_msg = database.add_message(self.session_id, "user", "[Configured Claude API Key]")
-            user_bubble = create_user_bubble(
-                content="Configured Claude API Key: •••••••••••••••••••• (Key Activated & Secured)",
-                timestamp=user_msg["created_at"],
-                is_dark=self.is_dark,
-            )
-            self.messages_list.controls.append(user_bubble)
-
-            asst_text = (
-                "🎉 **Anthropic Claude API Key Activated!**\n\n"
-                "KESHAV AI is now connected to **Anthropic Claude 3.5 Sonnet**.\n\n"
-                "You can now enjoy deep reasoning, architectural design, and state-of-the-art coding assistance!"
-            )
-            asst_msg = database.add_message(self.session_id, "assistant", asst_text)
-            asst_bubble = create_assistant_bubble(
-                content=asst_text,
-                timestamp=asst_msg["created_at"],
-                is_dark=self.is_dark,
-                on_copy=self._copy_to_clipboard,
-                on_speak=self._speak_message,
-                model_name="Claude Online",
-            )
-            self.messages_list.controls.append(asst_bubble)
-            try:
-                self.messages_list.update()
-            except RuntimeError:
-                pass
-            return
-
         # Auto-detect if user pasted an OpenAI API key into the chat
-        if (text.startswith("sk-proj-") or (text.startswith("sk-") and not text.startswith("sk-ant-"))) and len(text) >= 30:
+        if (text.startswith("sk-proj-") or text.startswith("sk-")) and len(text) >= 30:
             database.set_setting("openai_api_key", text)
             database.set_setting("provider", "openai")
             self.update_model_badge()
@@ -1296,40 +1251,6 @@ class ChatView(ft.Container):
                 return
         elif prov in ("openai", "chatgpt"):
             model_tag = settings.get("openai_model", "gpt-4o")
-        elif prov in ("claude", "anthropic"):
-            model_tag = settings.get("claude_model", "claude-3-5-sonnet")
-            if not settings.get("claude_api_key", "").strip():
-                full_text = (
-                    "⚠️ **Anthropic Claude API Key Needed**\n\n"
-                    "To chat with Claude 3.5 Sonnet:\n\n"
-                    "1. Get your API key from **[https://console.anthropic.com/settings/keys](https://console.anthropic.com/settings/keys)**.\n"
-                    "2. **Paste your key (`sk-ant-...`) directly into this chat box** or enter it in **⚙️ Settings**!\n\n"
-                    "KESHAV AI will immediately activate Claude for this chat."
-                )
-                assistant_bubble = AssistantBubble(
-                    content=full_text,
-                    timestamp=datetime.now().isoformat(),
-                    is_dark=self.is_dark,
-                    on_copy=self._copy_to_clipboard,
-                    on_speak=self._speak_message,
-                    model_name="Claude Setup",
-                )
-                if thinking_bubble in self.messages_list.controls:
-                    self.messages_list.controls.remove(thinking_bubble)
-                self.messages_list.controls.append(assistant_bubble)
-                database.add_message(self.session_id, "assistant", full_text)
-                try:
-                    self.messages_list.update()
-                except RuntimeError:
-                    pass
-                self.is_generating = False
-                self.send_icon.visible = True
-                self.send_spinner.visible = False
-                try:
-                    self.send_btn.update()
-                except RuntimeError:
-                    pass
-                return
 
         assistant_bubble: Optional[AssistantBubble] = None
         full_text = ""

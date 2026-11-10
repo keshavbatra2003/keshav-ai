@@ -239,7 +239,7 @@ async def stream_gemini_api(
                         if idx < len(models_to_try) - 1:
                             await asyncio.sleep(0.5)
                             continue
-                        raise RuntimeError("Google's Gemini API is temporarily unavailable due to high demand. Please try again in a few moments, or switch to ChatGPT / Claude in the model switcher.")
+                        raise RuntimeError("Google's Gemini API is temporarily unavailable due to high demand. Please try again in a few moments, or switch to ChatGPT in the model switcher.")
                     elif response.status_code != 200:
                         err_text = await response.aread()
                         last_error = f"Gemini API Error ({response.status_code}): {err_text.decode('utf-8', errors='ignore')}"
@@ -362,67 +362,6 @@ async def stream_openai_api(
                     continue
 
 
-async def stream_claude_api(
-    messages: List[Dict[str, Any]],
-    system_prompt: str,
-    api_key: str,
-    model: str = "claude-3-5-sonnet-20241022",
-) -> AsyncGenerator[str, None]:
-    """Streams responses from Anthropic Claude API via SSE."""
-    if not api_key:
-        raise ValueError(
-            "Anthropic Claude API key is missing.\n\n"
-            "Please paste your Anthropic key (`sk-ant-...`) in this chat box or in ⚙️ Settings."
-        )
-
-    url = "https://api.anthropic.com/v1/messages"
-
-    formatted_messages = []
-    for msg in messages:
-        formatted_messages.append({
-            "role": "user" if msg["role"] == "user" else "assistant",
-            "content": msg["content"],
-        })
-
-    payload: Dict[str, Any] = {
-        "model": model,
-        "max_tokens": 2048,
-        "messages": formatted_messages,
-        "stream": True,
-    }
-    if system_prompt:
-        payload["system"] = system_prompt
-
-    headers = {
-        "x-api-key": api_key,
-        "anthropic-version": "2023-06-01",
-        "Content-Type": "application/json",
-    }
-
-    accumulated = ""
-    async with httpx.AsyncClient(timeout=60.0) as client:
-        async with client.stream("POST", url, json=payload, headers=headers) as response:
-            if response.status_code != 200:
-                err_text = await response.aread()
-                raise RuntimeError(f"Claude API Error ({response.status_code}): {err_text.decode('utf-8', errors='ignore')}")
-
-            async for line in response.aiter_lines():
-                line = line.strip()
-                if not line or not line.startswith("data: "):
-                    continue
-                json_str = line[6:].strip()
-                try:
-                    data = json.loads(json_str)
-                    event_type = data.get("type", "")
-                    if event_type == "content_block_delta":
-                        text_piece = data.get("delta", {}).get("text", "")
-                        if text_piece:
-                            accumulated += text_piece
-                            yield accumulated
-                except json.JSONDecodeError:
-                    continue
-
-
 async def stream_ai_response(
     messages: List[Dict[str, Any]],
     settings: Dict[str, str],
@@ -441,7 +380,7 @@ async def stream_ai_response(
 
     if provider == "gemini":
         api_key = settings.get("gemini_api_key", "").strip()
-        model = settings.get("gemini_model", "gemini-3.5-flash-lite")
+        model = settings.get("gemini_model", "gemini-2.0-flash-lite")
         async for chunk in stream_gemini_api(messages, system_prompt, api_key, model):
             yield chunk
 
@@ -450,12 +389,6 @@ async def stream_ai_response(
         base_url = settings.get("openai_base_url", "https://api.openai.com/v1").strip()
         model = settings.get("openai_model", "gpt-4o")
         async for chunk in stream_openai_api(messages, system_prompt, api_key, base_url, model):
-            yield chunk
-
-    elif provider in ("claude", "anthropic"):
-        api_key = settings.get("claude_api_key", "").strip()
-        model = settings.get("claude_model", "claude-3-5-sonnet-20241022")
-        async for chunk in stream_claude_api(messages, system_prompt, api_key, model):
             yield chunk
 
     else:

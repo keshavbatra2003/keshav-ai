@@ -19,14 +19,12 @@ DEFAULT_SYSTEM_PROMPT = (
 )
 
 DEFAULT_SETTINGS = {
-    "provider": "gemini",  # "gemini", "openai", "claude", "demo"
+    "provider": "gemini",  # "gemini", "openai", "demo"
     "gemini_api_key": "",
     "gemini_model": "gemini-2.0-flash-lite",
     "openai_api_key": "",
     "openai_base_url": "https://api.openai.com/v1",
     "openai_model": "gpt-4o",
-    "claude_api_key": "",
-    "claude_model": "claude-3-5-sonnet-20241022",
     "system_prompt": DEFAULT_SYSTEM_PROMPT,
     "theme_mode": "dark",
     "persona": "Helpful Assistant",
@@ -117,8 +115,14 @@ def get_all_settings() -> Dict[str, str]:
             cursor.execute("UPDATE settings SET value = ? WHERE key = 'system_prompt'", (DEFAULT_SYSTEM_PROMPT,))
             conn.commit()
         
+        # If provider was set to removed 'claude', fallback to openai or gemini
+        if settings.get("provider") in ("claude", "anthropic"):
+            settings["provider"] = "openai"
+            cursor.execute("UPDATE settings SET value = 'openai' WHERE key = 'provider'")
+            conn.commit()
+
         # Guard: If Gemini API key is configured, only default to 'gemini' if no other provider has been explicitly chosen
-        if settings.get("gemini_api_key", "").strip() and settings.get("provider") not in ("openai", "chatgpt", "claude", "anthropic", "demo"):
+        if settings.get("gemini_api_key", "").strip() and settings.get("provider") not in ("openai", "chatgpt", "demo"):
             settings["provider"] = "gemini"
 
         return settings
