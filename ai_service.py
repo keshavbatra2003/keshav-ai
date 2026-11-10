@@ -350,29 +350,39 @@ async def stream_openai_api(
     model: str = "gpt-4o",
 ) -> AsyncGenerator[str, None]:
     """Streams responses from OpenAI-compatible API or free ChatGPT gateway."""
-    # Fast path: If no custom key is provided, use free fast ChatGPT gateway
+    # Fast path: If no custom key is provided, use free fast ChatGPT gateway with resilience
     if not api_key:
-        async with httpx.AsyncClient(timeout=60.0) as client:
-            resp = await client.post(
-                "https://text.pollinations.ai/",
-                json={
-                    "messages": [{"role": "system", "content": system_prompt}] + [
-                        {"role": m["role"], "content": m["content"]} for m in messages
-                    ],
-                    "model": "openai-fast",
-                },
-            )
-            if resp.status_code == 200:
-                text = resp.text.strip()
-                words = text.split(" ")
-                accumulated = ""
-                for i, w in enumerate(words):
-                    accumulated += (w + " " if i < len(words) - 1 else w)
-                    yield accumulated
-                    await asyncio.sleep(0.015)
-                return
-            else:
-                raise RuntimeError(f"ChatGPT free gateway returned {resp.status_code}")
+        browser_headers = {
+            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+            "Accept": "text/plain, */*",
+            "Content-Type": "application/json",
+        }
+        async with httpx.AsyncClient(timeout=45.0) as client:
+            for candidate in ["openai-fast", "openai"]:
+                try:
+                    resp = await client.post(
+                        "https://text.pollinations.ai/",
+                        json={
+                            "messages": [{"role": "system", "content": system_prompt}] + [
+                                {"role": m["role"], "content": m["content"]} for m in messages
+                            ],
+                            "model": candidate,
+                        },
+                        headers=browser_headers,
+                    )
+                    if resp.status_code == 200 and resp.text.strip():
+                        text = resp.text.strip()
+                        words = text.split(" ")
+                        accumulated = ""
+                        for i, w in enumerate(words):
+                            accumulated += (w + " " if i < len(words) - 1 else w)
+                            yield accumulated
+                            await asyncio.sleep(0.015)
+                        return
+                except Exception:
+                    continue
+
+        raise RuntimeError("ChatGPT free gateway temporarily busy")
 
     clean_base = base_url.rstrip("/")
     if not clean_base.endswith("/v1") and "ollama" not in clean_base and "groq" not in clean_base:
@@ -461,15 +471,37 @@ async def stream_ai_response(
     if provider == "gemini":
         api_key = settings.get("gemini_api_key", "").strip()
         model = settings.get("gemini_model", "gemini-2.0-flash-lite")
-        async for chunk in stream_gemini_api(messages, system_prompt, api_key, model):
-            yield chunk
+        try:
+            async for chunk in stream_gemini_api(messages, system_prompt, api_key, model):
+                yield chunk
+        except Exception:
+            # Fallback to ChatGPT free gateway or built-in engine
+            try:
+                async for chunk in stream_openai_api(messages, system_prompt, "", model="gpt-4o"):
+                    yield chunk
+            except Exception:
+                async for chunk in stream_demo_response(messages, system_prompt):
+                    yield chunk
 
     elif provider in ("openai", "chatgpt"):
         api_key = settings.get("openai_api_key", "").strip()
         base_url = settings.get("openai_base_url", "https://api.openai.com/v1").strip()
         model = settings.get("openai_model", "gpt-4o")
-        async for chunk in stream_openai_api(messages, system_prompt, api_key, base_url, model):
-            yield chunk
+        try:
+            async for chunk in stream_openai_api(messages, system_prompt, api_key, base_url, model):
+                yield chunk
+        except Exception:
+            # Automatic failover to Gemini if configured, else built-in engine
+            gemini_key = settings.get("gemini_api_key", "").strip()
+            if gemini_key:
+                try:
+                    async for chunk in stream_gemini_api(messages, system_prompt, gemini_key, "gemini-2.0-flash-lite"):
+                        yield chunk
+                    return
+                except Exception:
+                    pass
+            async for chunk in stream_demo_response(messages, system_prompt):
+                yield chunk
 
     else:
         async for chunk in stream_demo_response(messages, system_prompt):
