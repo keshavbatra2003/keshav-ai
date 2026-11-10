@@ -1045,6 +1045,10 @@ class ChatView(ft.Container):
             ),
         )
 
+    def _send_message(self, *args, **kwargs):
+        """Helper alias to send the current message."""
+        self.send_message()
+
     def _use_prompt(self, prompt: str, auto_send: bool = True):
         self.text_input.value = prompt
         try:
@@ -1052,7 +1056,7 @@ class ChatView(ft.Container):
         except RuntimeError:
             pass
         if auto_send:
-            self._send_message(None)
+            self.send_message()
         else:
             try:
                 self.app_page.run_task(self.text_input.focus)
