@@ -44,7 +44,21 @@ class TestDictateEndpoint(unittest.TestCase):
         async def google_verification_file(code: str):
             return f"google-site-verification: google{code}.html"
 
+        @self.app.get("/logo.png")
+        async def logo_file():
+            return HTMLResponse("fake png data", media_type="image/png")
+
+        @self.app.get("/favicon.png")
+        async def favicon_file():
+            return HTMLResponse("fake icon data", media_type="image/png")
+
         self.client = TestClient(self.app)
+
+    def test_logo_and_favicon_endpoints(self):
+        resp_logo = self.client.get("/logo.png")
+        self.assertEqual(resp_logo.status_code, 200)
+        resp_fav = self.client.get("/favicon.png")
+        self.assertEqual(resp_fav.status_code, 200)
 
     def test_robots_and_sitemap(self):
         resp_robots = self.client.get("/robots.txt")

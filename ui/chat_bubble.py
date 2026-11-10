@@ -105,10 +105,15 @@ class AssistantBubble(ft.Row):
             width=30,
             height=30,
             border_radius=15,
-            bgcolor="#FFFFFF" if self.is_dark else "#000000",
-            border=ft.Border.all(1, "#383838" if self.is_dark else "#E5E5E5"),
-            alignment=ft.Alignment(0, 0),
-            content=ft.Text("KB", size=11, weight=ft.FontWeight.BOLD, color="#000000" if self.is_dark else "#FFFFFF"),
+            clip_behavior=ft.ClipBehavior.ANTI_ALIAS,
+            border=ft.Border.all(1, "#383838" if self.is_dark else "#CCCCCC"),
+            bgcolor="#000000",
+            content=ft.Image(
+                src="/logo.png",
+                width=30,
+                height=30,
+                fit=ft.BoxFit.COVER,
+            ),
         )
 
         bubble_container = ft.Container(
@@ -295,10 +300,15 @@ def create_thinking_bubble(is_dark: bool) -> ft.Control:
                 width=30,
                 height=30,
                 border_radius=15,
-                bgcolor="#FFFFFF" if is_dark else "#000000",
-                border=ft.Border.all(1, "#383838" if is_dark else "#E5E5E5"),
-                alignment=ft.Alignment(0, 0),
-                content=ft.Text("KB", size=11, weight=ft.FontWeight.BOLD, color="#000000" if is_dark else "#FFFFFF"),
+                clip_behavior=ft.ClipBehavior.ANTI_ALIAS,
+                border=ft.Border.all(1, "#383838" if is_dark else "#CCCCCC"),
+                bgcolor="#000000",
+                content=ft.Image(
+                    src="/logo.png",
+                    width=30,
+                    height=30,
+                    fit=ft.BoxFit.COVER,
+                ),
             ),
             ft.Container(
                 padding=ft.Padding(4, 4, 10, 4),

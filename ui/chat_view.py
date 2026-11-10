@@ -850,13 +850,18 @@ class ChatView(ft.Container):
                 spacing=16,
                 controls=[
                     ft.Container(
-                        width=52,
-                        height=52,
-                        border_radius=26,
-                        bgcolor="#FFFFFF" if self.is_dark else "#000000",
-                        border=ft.Border.all(1.5, "#383838" if self.is_dark else "#E5E5E5"),
-                        alignment=ft.Alignment(0, 0),
-                        content=ft.Text("KB", size=20, weight=ft.FontWeight.BOLD, color="#000000" if self.is_dark else "#FFFFFF"),
+                        width=68,
+                        height=68,
+                        border_radius=34,
+                        clip_behavior=ft.ClipBehavior.ANTI_ALIAS,
+                        border=ft.Border.all(1.5, "#383838" if self.is_dark else "#CCCCCC"),
+                        bgcolor="#000000",
+                        content=ft.Image(
+                            src="/logo.png",
+                            width=68,
+                            height=68,
+                            fit=ft.BoxFit.COVER,
+                        ),
                     ),
                     ft.Text(
                         "What can I help with?",

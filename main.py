@@ -318,6 +318,20 @@ if __name__ == "__main__":
 </urlset>"""
             return Response(content=xml_content, media_type="application/xml")
 
+        from fastapi.responses import FileResponse, HTMLResponse, PlainTextResponse
+
+        @app.get("/logo.png")
+        @app.get("/logo.jpg")
+        async def logo_endpoint():
+            logo_path = os.path.join(os.path.dirname(__file__), "assets", "logo.png")
+            return FileResponse(logo_path, media_type="image/png")
+
+        @app.get("/favicon.png")
+        @app.get("/favicon.ico")
+        async def favicon_endpoint():
+            fav_path = os.path.join(os.path.dirname(__file__), "assets", "favicon.png")
+            return FileResponse(fav_path, media_type="image/png")
+
         @app.get("/dictate", response_class=HTMLResponse)
         async def dictate_page():
             dictate_path = os.path.join(os.path.dirname(__file__), "assets", "dictate.html")
@@ -341,4 +355,4 @@ if __name__ == "__main__":
         host = os.environ.get("HOST", "0.0.0.0" if os.environ.get("PORT") else "127.0.0.1")
         uvicorn.run(app, host=host, port=port)
     else:
-        ft.run(main)
+        ft.run(main, assets_dir="assets")
