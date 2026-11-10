@@ -21,6 +21,73 @@ IMAGE_PREFIX_PATTERNS = [
     r"^\s*(?:imagine|show me an image of|show me a picture of)\b\s*",
 ]
 
+SEARCH_PREFIX_PATTERNS = [
+    r"^\s*/(?:search|web|browse|google|ddg|lookup)\b\s*",
+    r"^\s*(?:can you |could you |please )?(?:search|browse|lookup|check)(?:\s+(?:the|for|on))?\s+web\s+(?:for|about)?\b\s*",
+    r"^\s*(?:what is the latest|latest news|current news|breaking news)\s+(?:on|about)?\b\s*",
+    r"^\s*(?:who won|current price of|today's news on)\b\s*",
+]
+
+
+def is_search_request(text: str) -> bool:
+    """Detects whether user prompt requests a live real-time web search."""
+    if not text:
+        return False
+    t = text.strip()
+    return any(re.search(pat, t, re.IGNORECASE) for pat in SEARCH_PREFIX_PATTERNS)
+
+
+def extract_search_query(text: str) -> str:
+    """Extracts search query keywords from a search command or natural inquiry."""
+    cleaned = text.strip()
+    for pat in SEARCH_PREFIX_PATTERNS:
+        match = re.search(pat, cleaned, re.IGNORECASE)
+        if match:
+            cleaned = cleaned[match.end():].strip()
+            break
+    cleaned = re.sub(r"[\.!\?]+$", "", cleaned).strip()
+    return cleaned if cleaned else text.strip()
+
+
+async def search_duckduckgo(query: str) -> Optional[str]:
+    """Queries DuckDuckGo Instant Answer API for live encyclopedic and web context."""
+    if not query:
+        return None
+    encoded = urllib.parse.quote(query.strip())
+    url = f"https://api.duckduckgo.com/?q={encoded}&format=json&no_html=1"
+    try:
+        async with httpx.AsyncClient(timeout=8.0) as client:
+            resp = await client.get(url, headers={"User-Agent": "Mozilla/5.0 (KESHAV-AI-Bot)"})
+            if resp.status_code != 200:
+                return None
+            data = resp.json()
+            abstract = data.get("AbstractText", "").strip()
+            source = data.get("AbstractSource", "")
+            src_url = data.get("AbstractURL", "")
+            heading = data.get("Heading", "")
+
+            topics = []
+            for t in data.get("RelatedTopics", []):
+                if isinstance(t, dict) and "Text" in t:
+                    topics.append(t["Text"])
+                    if len(topics) >= 4:
+                        break
+
+            if not abstract and not topics:
+                return None
+
+            res = []
+            if heading or abstract:
+                res.append(f"**{heading}**\n{abstract}" if heading else abstract)
+                if src_url:
+                    res.append(f"*Source: [{source if source else 'Web'}]({src_url})*")
+            if topics:
+                res.append("**Related Live Context:**\n" + "\n".join(f"- {item}" for item in topics))
+            return "\n\n".join(res)
+    except Exception as e:
+        print(f"Web search error: {e}")
+        return None
+
 
 def is_image_request(text: str) -> bool:
     """Detects whether user prompt is asking to generate/draw an image."""
@@ -377,6 +444,19 @@ async def stream_ai_response(
 
     provider = settings.get("provider", "gemini").lower()
     system_prompt = settings.get("system_prompt", "")
+
+    # Live Real-Time Web Search Augmentation
+    if messages and is_search_request(raw_last):
+        search_query = extract_search_query(raw_last)
+        web_info = await search_duckduckgo(search_query)
+        if web_info:
+            web_context = (
+                f"\n\n[REAL-TIME LIVE WEB SEARCH RESULTS FOR '{search_query}']:\n"
+                f"{web_info}\n\n"
+                f"[Instructions: Use the real-time web context above to provide an accurate, up-to-date answer. "
+                f"Begin your reply with '🌐 **Live Web Search**' and cite sources if available.]"
+            )
+            system_prompt = (system_prompt + web_context) if system_prompt else web_context
 
     if provider == "gemini":
         api_key = settings.get("gemini_api_key", "").strip()

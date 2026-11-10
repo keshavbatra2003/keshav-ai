@@ -346,6 +346,54 @@ if __name__ == "__main__":
         async def google_verification_file(code: str):
             return f"google-site-verification: google{code}.html"
 
+        @app.get("/share/{session_id}", response_class=HTMLResponse)
+        async def share_conversation_page(session_id: str):
+            session = database.get_session(session_id)
+            if not session:
+                return HTMLResponse(
+                    "<html><body style='background:#0d0d0d;color:#fff;font-family:sans-serif;text-align:center;padding:60px 20px;'>"
+                    "<h2 style='margin-bottom:12px;'>Conversation Not Found</h2>"
+                    "<p style='color:#888;margin-bottom:24px;'>This conversation may be private, expired, or deleted.</p>"
+                    "<a href='/' style='background:#fff;color:#000;padding:10px 20px;border-radius:20px;text-decoration:none;font-weight:600;'>Go to KESHAV AI →</a>"
+                    "</body></html>",
+                    status_code=404,
+                )
+
+            messages = database.get_messages(session_id)
+            template_path = os.path.join(os.path.dirname(__file__), "assets", "share_template.html")
+            with open(template_path, "r", encoding="utf-8") as f:
+                template = f.read()
+
+            import html
+            msg_html_list = []
+            for m in messages:
+                role = m.get("role", "user")
+                content = m.get("content", "")
+                if role == "user":
+                    escaped = html.escape(content).replace("\n", "<br>")
+                    msg_html_list.append(
+                        f'<div class="message-row user">'
+                        f'  <div class="bubble">{escaped}</div>'
+                        f'</div>'
+                    )
+                else:
+                    escaped_raw = html.escape(content)
+                    msg_html_list.append(
+                        f'<div class="message-row assistant">'
+                        f'  <div class="avatar"><img src="/logo.png" alt="KESHAV AI"></div>'
+                        f'  <div class="bubble md-content" data-raw="{escaped_raw}">{escaped_raw}</div>'
+                        f'</div>'
+                    )
+
+            rendered_msgs = "\n".join(msg_html_list) if msg_html_list else "<p style='color:#777;'>No messages in this chat yet.</p>"
+            title = session.get("title", "Conversation")
+            date_str = session.get("created_at", "")[:10] if session.get("created_at") else "Recent"
+
+            output = template.replace("{{TITLE}}", html.escape(title))
+            output = output.replace("{{DATE}}", html.escape(date_str))
+            output = output.replace("{{MESSAGES_HTML}}", rendered_msgs)
+            return HTMLResponse(output)
+
         flet_app = flet_fastapi.app(
             main,
             assets_dir="assets",

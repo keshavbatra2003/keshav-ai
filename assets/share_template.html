@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{TITLE}} - KESHAV AI by Keshav Batra</title>
+  <meta name="description" content="Read this shared AI conversation on KESHAV AI, created and developed by Keshav Batra.">
+  <meta property="og:title" content="{{TITLE}} - KESHAV AI">
+  <meta property="og:description" content="Shared conversation on KESHAV AI, created and developed by Keshav Batra.">
+  <meta property="og:image" content="https://keshav-ai.onrender.com/logo.png">
+  <meta property="og:type" content="article">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{{TITLE}} - KESHAV AI">
+  <meta name="twitter:description" content="Shared conversation on KESHAV AI by Keshav Batra.">
+  <meta name="twitter:image" content="https://keshav-ai.onrender.com/logo.png">
+  <link rel="icon" type="image/png" href="/favicon.png">
+
+  <!-- Markdown & Code Highlighting -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: #0D0D0D;
+      color: #ECECEC;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.6;
+      padding-bottom: 60px;
+    }
+    header {
+      position: sticky;
+      top: 0;
+      background: rgba(13, 13, 13, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid #262626;
+      padding: 12px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 100;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: #FFFFFF;
+    }
+    .brand img {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 1px solid #333;
+    }
+    .brand-title {
+      font-weight: 700;
+      font-size: 15px;
+      letter-spacing: 0.5px;
+    }
+    .brand-sub {
+      font-size: 11px;
+      color: #8E8E8E;
+    }
+    .cta-btn {
+      background: #FFFFFF;
+      color: #000000;
+      text-decoration: none;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      transition: opacity 0.2s;
+    }
+    .cta-btn:hover { opacity: 0.88; }
+    .container {
+      max-width: 780px;
+      margin: 0 auto;
+      padding: 30px 20px;
+    }
+    .chat-header {
+      margin-bottom: 30px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #262626;
+    }
+    .chat-header h1 {
+      font-size: 26px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      color: #FFFFFF;
+    }
+    .chat-meta {
+      font-size: 12.5px;
+      color: #888888;
+      display: flex;
+      gap: 14px;
+      align-items: center;
+    }
+    .badge {
+      background: #1F1F1F;
+      border: 1px solid #333333;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      color: #CCCCCC;
+    }
+    .message-row {
+      margin-bottom: 24px;
+      display: flex;
+      gap: 14px;
+    }
+    .message-row.user {
+      justify-content: flex-end;
+    }
+    .avatar {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .avatar img {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+    .bubble {
+      max-width: 85%;
+      border-radius: 18px;
+      padding: 14px 18px;
+      font-size: 14.5px;
+      word-break: break-word;
+    }
+    .user .bubble {
+      background-color: #212121;
+      color: #FFFFFF;
+      border-bottom-right-radius: 4px;
+    }
+    .assistant .bubble {
+      background-color: #141414;
+      border: 1px solid #262626;
+      color: #ECECEC;
+      border-bottom-left-radius: 4px;
+      width: 100%;
+    }
+    .bubble pre {
+      background: #000000;
+      border: 1px solid #2B2B2B;
+      border-radius: 10px;
+      padding: 12px;
+      overflow-x: auto;
+      margin: 12px 0;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 13px;
+    }
+    .bubble code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 13px;
+      background: rgba(255, 255, 255, 0.08);
+      padding: 2px 5px;
+      border-radius: 4px;
+    }
+    .bubble pre code {
+      background: transparent;
+      padding: 0;
+    }
+    .bubble p { margin-bottom: 10px; }
+    .bubble p:last-child { margin-bottom: 0; }
+    .bubble ul, .bubble ol { margin: 8px 0 8px 20px; }
+    .bubble blockquote {
+      border-left: 3px solid #555;
+      padding-left: 10px;
+      margin: 8px 0;
+      color: #AAAAAA;
+    }
+    footer {
+      margin-top: 50px;
+      text-align: center;
+      padding: 20px;
+      color: #666666;
+      font-size: 12px;
+      border-top: 1px solid #1F1F1F;
+    }
+    footer a { color: #888888; text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <header>
+    <a href="/" class="brand">
+      <img src="/logo.png" alt="KESHAV AI Logo">
+      <div>
+        <div class="brand-title">KESHAV AI</div>
+        <div class="brand-sub">by Keshav Batra</div>
+      </div>
+    </a>
+    <a href="/" class="cta-btn">Start Your Own Chat →</a>
+  </header>
+
+  <div class="container">
+    <div class="chat-header">
+      <h1>{{TITLE}}</h1>
+      <div class="chat-meta">
+        <span class="badge">Shared Conversation</span>
+        <span>{{DATE}}</span>
+        <span>Developed by <strong>Keshav Batra</strong></span>
+      </div>
+    </div>
+
+    <div class="chat-messages" id="messages-container">
+      {{MESSAGES_HTML}}
+    </div>
+  </div>
+
+  <footer>
+    <p>Powered by <strong>KESHAV AI</strong> • Created & Developed by <strong>Keshav Batra</strong></p>
+    <p style="margin-top: 6px;"><a href="/">Chat with KESHAV AI for Free</a></p>
+  </footer>
+
+  <script>
+    // Format markdown for all assistant bubbles
+    document.querySelectorAll('.md-content').forEach(function(el) {
+      var raw = el.getAttribute('data-raw');
+      if (raw) {
+        el.innerHTML = marked.parse(raw);
+      }
+    });
+    // Syntax highlight code blocks
+    hljs.highlightAll();
+  </script>
+</body>
+</html>

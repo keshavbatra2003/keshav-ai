@@ -476,10 +476,13 @@ class ChatView(ft.Container):
         async def _pick():
             try:
                 await self.file_picker.pick_files(
-                    dialog_title="Attach Code, Document, or Audio Note",
+                    dialog_title="Attach PDF, Document, Code, or Notes",
                     allow_multiple=True,
                     with_data=True,
-                    allowed_extensions=["py", "txt", "md", "json", "js", "ts", "html", "css", "yaml", "yml", "csv", "sql", "sh", "mp3", "wav", "m4a", "ogg", "aac"],
+                    allowed_extensions=[
+                        "pdf", "docx", "txt", "md", "py", "json", "js", "ts",
+                        "html", "css", "yaml", "yml", "csv", "sql", "sh", "xml", "log"
+                    ],
                 )
             except Exception as err:
                 print("File picker error:", err)
@@ -494,9 +497,36 @@ class ChatView(ft.Container):
             name = getattr(f, "name", "file")
             content_text = ""
             size_kb = 0
+            is_pdf = name.lower().endswith(".pdf")
 
-            # Read from bytes or path
-            if hasattr(f, "bytes") and f.bytes:
+            # Handle PDF extraction with pypdf
+            if is_pdf:
+                try:
+                    import io
+                    import pypdf
+                    pdf_stream = None
+                    if hasattr(f, "bytes") and f.bytes:
+                        pdf_stream = io.BytesIO(f.bytes)
+                        size_kb = round(len(f.bytes) / 1024, 1)
+                    elif hasattr(f, "path") and f.path and os.path.exists(f.path):
+                        pdf_stream = open(f.path, "rb")
+                        size_kb = round(os.path.getsize(f.path) / 1024, 1)
+
+                    if pdf_stream:
+                        reader = pypdf.PdfReader(pdf_stream)
+                        pages_text = []
+                        for p_idx, page in enumerate(reader.pages):
+                            p_txt = page.extract_text()
+                            if p_txt and p_txt.strip():
+                                pages_text.append(f"--- Page {p_idx + 1} ---\n{p_txt.strip()}")
+                        content_text = "\n\n".join(pages_text) if pages_text else "[Empty or scanned PDF document]"
+                        if hasattr(pdf_stream, "close") and not isinstance(pdf_stream, io.BytesIO):
+                            pdf_stream.close()
+                except Exception as pdf_err:
+                    content_text = f"[PDF Extraction Error: {pdf_err}]"
+
+            # Handle text/code files
+            elif hasattr(f, "bytes") and f.bytes:
                 try:
                     content_text = f.bytes.decode("utf-8", errors="ignore")
                 except Exception:
@@ -512,10 +542,15 @@ class ChatView(ft.Container):
                 except Exception as read_err:
                     print("Error reading file:", read_err)
 
+            # Limit text size to 30,000 chars for optimal model context
+            if len(content_text) > 30000:
+                content_text = content_text[:30000] + "\n\n[Document truncated to first 30,000 characters for optimal AI reasoning]"
+
             self.attached_files.append({
                 "name": name,
                 "content": content_text,
                 "size_str": f"{size_kb} KB",
+                "is_pdf": is_pdf,
             })
 
         self._refresh_attachment_chips()
@@ -536,7 +571,13 @@ class ChatView(ft.Container):
                         tight=True,
                         spacing=6,
                         controls=[
-                            ft.Icon(ft.Icons.CODE_ROUNDED if att["name"].endswith((".py", ".js", ".ts", ".html")) else ft.Icons.DESCRIPTION_OUTLINED, size=14, color=self.theme["primary"]),
+                            ft.Icon(
+                                ft.Icons.PICTURE_AS_PDF_ROUNDED if att.get("is_pdf") else (
+                                    ft.Icons.CODE_ROUNDED if att["name"].endswith((".py", ".js", ".ts", ".html")) else ft.Icons.DESCRIPTION_OUTLINED
+                                ),
+                                size=15,
+                                color="#EF4444" if att.get("is_pdf") else self.theme["primary"],
+                            ),
                             ft.Text(f"{att['name']} ({att['size_str']})", size=11.5, color=self.theme["text_primary"]),
                             ft.IconButton(
                                 icon=ft.Icons.CLOSE_ROUNDED,
@@ -903,27 +944,36 @@ class ChatView(ft.Container):
 
     def _build_empty_state(self) -> ft.Control:
         prompt_cards = [
-            ("🎨 Create image", "Cyberpunk neon city in rain", "/image futuristic cyberpunk neon city in rain 4k photorealistic"),
-            ("💡 Brainstorm", "Startup ideas for 2026", "Brainstorm 5 innovative startup ideas for 2026 leveraging AI agents and local-first software."),
-            ("💻 Code Python", "FastAPI boilerplate with CRUD", "Write a clean, production-ready Python FastAPI boilerplate with health check and CRUD endpoints."),
-            ("📝 Draft email", "Polite meeting follow-up", "Draft a polite and concise email declining a meeting invite due to a schedule conflict."),
+            ("🌐 Live Web Search", "Real-time AI news & facts", "/search latest artificial intelligence breakthroughs and news in 2026"),
+            ("🎨 Generate Image", "Glowing cyber-mandala in 8K", "/image futuristic glowing cyber-mandala emblem with KB initials in 8k photorealistic metallic chrome"),
+            ("💻 Code Python", "High-performance cache with TTL", "Write a clean, production-ready Python in-memory cache decorator with TTL and thread safety."),
+            ("📝 Executive Writing", "Partnership outreach proposal", "Draft a persuasive, professional partnership outreach email for an innovative AI collaboration."),
         ]
 
         card_controls = []
         for icon_title, desc, prompt_text in prompt_cards:
             card = ft.Container(
-                width=240 if not self.is_mobile else None,
+                width=250 if not self.is_mobile else None,
                 padding=ft.Padding(14, 12, 14, 12),
                 border_radius=14,
                 bgcolor=self.theme["surface_variant"],
                 border=ft.Border.all(1, self.theme["border"]),
-                on_click=lambda _, p=prompt_text: self._use_prompt(p),
-                content=ft.Column(
-                    spacing=3,
-                    tight=True,
+                ink=True,
+                tooltip="Click to ask instantly",
+                on_click=lambda _, p=prompt_text: self._use_prompt(p, auto_send=True),
+                content=ft.Row(
+                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                    vertical_alignment=ft.CrossAxisAlignment.CENTER,
                     controls=[
-                        ft.Text(icon_title, size=13, weight=ft.FontWeight.W_600, color=self.theme["text_primary"]),
-                        ft.Text(desc, size=11.5, color=self.theme["text_muted"]),
+                        ft.Column(
+                            spacing=3,
+                            tight=True,
+                            controls=[
+                                ft.Text(icon_title, size=13, weight=ft.FontWeight.W_600, color=self.theme["text_primary"]),
+                                ft.Text(desc, size=11.5, color=self.theme["text_muted"]),
+                            ],
+                        ),
+                        ft.Icon(ft.Icons.ARROW_FORWARD_ROUNDED, size=16, color=self.theme["text_muted"]),
                     ],
                 ),
             )
@@ -975,16 +1025,19 @@ class ChatView(ft.Container):
             ),
         )
 
-    def _use_prompt(self, prompt: str):
+    def _use_prompt(self, prompt: str, auto_send: bool = True):
         self.text_input.value = prompt
-        try:
-            self.app_page.run_task(self.text_input.focus)
-        except Exception:
-            pass
         try:
             self.text_input.update()
         except RuntimeError:
             pass
+        if auto_send:
+            self._send_message(None)
+        else:
+            try:
+                self.app_page.run_task(self.text_input.focus)
+            except Exception:
+                pass
 
     def _copy_to_clipboard(self, text: str):
         async def _do_copy():
@@ -1513,22 +1566,24 @@ class ChatView(ft.Container):
         self.app_page.show_dialog(dialog)
 
     def _open_share_dialog(self):
-        """Modal dialog displaying public shareable link with WhatsApp and Clipboard copy buttons."""
+        """Modal dialog displaying public shareable conversation link with social sharing buttons."""
         import urllib.parse
 
-        share_url = database.get_setting("share_url", "https://keshavai.onrender.com")
-        lan_url = database.get_setting("lan_url", "http://192.168.29.139:8550")
+        share_url = f"https://keshav-ai.onrender.com/share/{self.session_id}"
+        home_url = "https://keshav-ai.onrender.com"
 
-        share_text = f"🤖 Chat with KESHAV AI: {share_url}"
+        share_text = f"🤖 Check out this conversation on KESHAV AI by Keshav Batra: {share_url}"
         encoded_wa_text = urllib.parse.quote(share_text)
         wa_url = f"https://api.whatsapp.com/send?text={encoded_wa_text}"
+        encoded_tweet = urllib.parse.quote(f"Check out this AI conversation on KESHAV AI by Keshav Batra! {share_url}")
+        twitter_url = f"https://twitter.com/intent/tweet?text={encoded_tweet}"
 
         def copy_share_link(_):
             async def _do():
                 try:
                     await self.clipboard.set(share_url)
                     self.app_page.show_dialog(
-                        ft.SnackBar(content=ft.Text("✅ Link copied! Ready to paste into WhatsApp."), duration=2500)
+                        ft.SnackBar(content=ft.Text("✅ Conversation link copied to clipboard!"), duration=2500)
                     )
                 except Exception as e:
                     print("Clipboard error:", e)
@@ -1540,7 +1595,7 @@ class ChatView(ft.Container):
                 try:
                     await self.clipboard.set(share_text)
                     self.app_page.show_dialog(
-                        ft.SnackBar(content=ft.Text("✅ WhatsApp invite message copied to clipboard!"), duration=2500)
+                        ft.SnackBar(content=ft.Text("✅ WhatsApp message copied to clipboard!"), duration=2500)
                     )
                 except Exception as e:
                     print("Clipboard error:", e)
@@ -1552,8 +1607,8 @@ class ChatView(ft.Container):
                 spacing=8,
                 vertical_alignment=ft.CrossAxisAlignment.CENTER,
                 controls=[
-                    ft.Icon(ft.Icons.SHARE_ROUNDED, color=self.theme["accent"], size=22),
-                    ft.Text("Share KESHAV AI", size=18, weight=ft.FontWeight.BOLD),
+                    ft.Icon(ft.Icons.SHARE_ROUNDED, color=self.theme["primary"], size=22),
+                    ft.Text("Share Conversation", size=18, weight=ft.FontWeight.BOLD),
                 ],
             ),
             content=ft.Container(
@@ -1563,7 +1618,7 @@ class ChatView(ft.Container):
                     spacing=12,
                     controls=[
                         ft.Text(
-                            "Share this secure link with anyone on WhatsApp, iPhone, Android, or PC so they can chat with KESHAV AI directly:",
+                            "Anyone with this link can view this conversation with live formatted code and markdown:",
                             size=13,
                             color=self.theme["text_secondary"],
                         ),
@@ -1581,25 +1636,25 @@ class ChatView(ft.Container):
                                         spacing=6,
                                         controls=[
                                             ft.Icon(ft.Icons.PUBLIC_ROUNDED, size=15, color=self.theme["primary"]),
-                                            ft.Text("Worldwide HTTPS Link (Works Anywhere)", size=12, weight=ft.FontWeight.BOLD, color=self.theme["primary"]),
+                                            ft.Text("Public View Link", size=12, weight=ft.FontWeight.BOLD, color=self.theme["primary"]),
                                         ],
                                     ),
                                     ft.Text(
                                         share_url,
                                         selectable=True,
-                                        size=13,
+                                        size=12.5,
                                         weight=ft.FontWeight.W_600,
                                         color=self.theme["text_primary"],
                                     ),
                                 ],
                             ),
                         ),
-                        # WhatsApp Button & Copy Buttons
+                        # WhatsApp & Twitter / X Buttons
                         ft.Row(
                             spacing=8,
                             controls=[
                                 ft.FilledButton(
-                                    "Share on WhatsApp",
+                                    "WhatsApp",
                                     icon=ft.Icons.SEND_ROUNDED,
                                     url=wa_url,
                                     expand=True,
@@ -1608,27 +1663,34 @@ class ChatView(ft.Container):
                                         color="#FFFFFF",
                                     ),
                                 ),
+                                ft.FilledButton(
+                                    "Share on X",
+                                    icon=ft.Icons.TAG_ROUNDED,
+                                    url=twitter_url,
+                                    expand=True,
+                                    style=ft.ButtonStyle(
+                                        bgcolor="#1DA1F2",
+                                        color="#FFFFFF",
+                                    ),
+                                ),
+                            ],
+                        ),
+                        # Copy formatted link & invite
+                        ft.Row(
+                            spacing=8,
+                            controls=[
                                 ft.FilledTonalButton(
                                     "Copy Link",
                                     icon=ft.Icons.COPY_ROUNDED,
                                     on_click=copy_share_link,
                                     expand=True,
                                 ),
-                            ],
-                        ),
-                        # Copy formatted invite
-                        ft.OutlinedButton(
-                            "Copy WhatsApp Invite Message",
-                            icon=ft.Icons.CONTENT_PASTE_ROUNDED,
-                            on_click=copy_invite_text,
-                        ),
-                        # Local Wi-Fi Info
-                        ft.Divider(height=1),
-                        ft.Row(
-                            spacing=6,
-                            controls=[
-                                ft.Icon(ft.Icons.WIFI_ROUNDED, size=14, color=self.theme["text_muted"]),
-                                ft.Text(f"Same Wi-Fi LAN: {lan_url}", size=11, color=self.theme["text_muted"]),
+                                ft.OutlinedButton(
+                                    "Copy Invite Text",
+                                    icon=ft.Icons.CONTENT_PASTE_ROUNDED,
+                                    on_click=copy_invite_text,
+                                    expand=True,
+                                ),
                             ],
                         ),
                     ],
@@ -1638,4 +1700,5 @@ class ChatView(ft.Container):
                 ft.TextButton("Close", on_click=lambda _: self.app_page.pop_dialog()),
             ],
         )
+        self.app_page.show_dialog(dialog)
         self.app_page.show_dialog(dialog)
