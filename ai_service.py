@@ -203,25 +203,36 @@ class MockAIEngine:
                 "I am a versatile, cross-platform AI assistant designed to run seamlessly on iPhones, Android phones, laptops, and PCs."
             )
 
+        # Casual reactions & positive feedback
+        if last_msg in ["wow", "cool", "great", "nice", "awesome", "super", "perfect", "good", "thanks", "thank you", "ty", "yay"]:
+            return (
+                "Thank you! 😊 I'm glad I could help. What should we tackle next?\n\n"
+                "- 💻 **Code:** Write or debug a script in Python, JS, or SQL\n"
+                "- 🎨 **Image:** Generate high-definition art with `/image <prompt>`\n"
+                "- 🌐 **Search:** Search the live web with `/search <query>`\n"
+                "- 📄 **Documents:** Attach a PDF or code file with the `+` button to summarize it!"
+            )
+
         # Greetings
-        if any(w in last_msg for w in ["hi", "hello", "hey", "greetings", "good morning", "good evening"]):
+        if any(w in last_msg for w in ["hi", "hello", "hey", "yo", "sup", "greetings", "good morning", "good evening"]):
             return (
                 "👋 **Hello! Welcome to KESHAV AI.**\n\n"
-                "I am your versatile assistant, optimized for both your laptop and mobile device.\n\n"
+                "I am your smart assistant created by Keshav Batra, optimized for both your laptop and mobile device.\n\n"
                 "- 💻 **Code & Architecture:** Build scripts, review bugs, optimize queries.\n"
-                "- 📝 **Drafting & Writing:** Compose clean emails, proposals, and summaries.\n"
-                "- ⚙️ **Custom AI Providers:** Connect your **Google Gemini** or **OpenAI/Ollama** API keys in **Settings**.\n\n"
+                "- 🎨 **Image Generation:** Create high-definition art via `/image <description>`.\n"
+                "- 🌐 **Live Web Search:** Find current news & facts via `/search <query>`.\n"
+                "- 📄 **Document Analysis:** Attach any PDF or text file with `+` for instant answers.\n\n"
                 "How can I assist your workflow today?"
             )
 
         # General inquiry
         return (
-            f"Here is my analysis on: *\"{messages[-1]['content']}\"*\n\n"
-            "### Core Analysis\n"
-            "1. **Primary Insight:** Approaching this requires clean separation of concerns and clear data contracts.\n"
-            "2. **Key Recommendation:** Validate your assumptions incrementally and ensure state updates remain idempotent.\n"
-            "3. **Cross-Platform Compatibility:** Responsive layout rules ensure equal accessibility across laptop screens and mobile touch displays.\n\n"
-            "> **Tip:** KESHAV AI is currently running in **Offline Demo Mode**. To enable live models, open **Settings** and add a Google Gemini or OpenAI/Ollama key."
+            f"Here is my analysis on: *\"{raw_last}\"*\n\n"
+            "### Key Insights & Observations:\n"
+            "1. **Primary Focus:** Addressing this effectively requires clear structure, modular components, and verifying edge cases.\n"
+            "2. **Strategic Approach:** Breaking the challenge into smaller, measurable steps yields the cleanest results.\n"
+            "3. **Practical Next Step:** Validate the foundational contract first, then iterate toward optimal performance.\n\n"
+            "Would you like me to dive deeper into any specific aspect or explore code implementations for this?"
         )
 
 
