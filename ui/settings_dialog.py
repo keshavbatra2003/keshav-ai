@@ -305,13 +305,17 @@ class SettingsDialog:
                         padding=ft.Padding(12, 10, 12, 10),
                         border_radius=10,
                         bgcolor=self.theme["surface_variant"],
+                        border=ft.Border.all(1, self.theme["border"]),
+                        url="https://github.com/keshavbatra2003",
+                        tooltip="View Keshav Batra on GitHub (github.com/keshavbatra2003)",
+                        ink=True,
                         content=ft.Row(
                             alignment=ft.MainAxisAlignment.CENTER,
                             spacing=8,
                             controls=[
                                 ft.Icon(ft.Icons.VERIFIED_ROUNDED, size=16, color=self.theme["primary"]),
                                 ft.Text(
-                                    "Developer: Keshav Batra",
+                                    "Developer: Keshav Batra (GitHub Profile ↗)",
                                     size=12.5,
                                     weight=ft.FontWeight.BOLD,
                                     color=self.theme["text_primary"],

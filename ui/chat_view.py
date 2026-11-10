@@ -430,7 +430,17 @@ class ChatView(ft.Container):
 
         # ChatGPT Footer Disclaimer
         self.footer_disclaimer = ft.Text(
-            "KESHAV AI can make mistakes. Check important info. • Developed by Keshav Batra",
+            spans=[
+                ft.TextSpan("KESHAV AI can make mistakes. Check important info. • Developed by "),
+                ft.TextSpan(
+                    "Keshav Batra",
+                    url="https://github.com/keshavbatra2003",
+                    style=ft.TextStyle(
+                        decoration=ft.TextDecoration.UNDERLINE,
+                        color=self.theme["text_primary"],
+                    ),
+                ),
+            ],
             size=11,
             color=self.theme["text_muted"],
             text_align=ft.TextAlign.CENTER,
@@ -1008,7 +1018,17 @@ class ChatView(ft.Container):
                         text_align=ft.TextAlign.CENTER,
                     ),
                     ft.Text(
-                        "KESHAV AI • Developed by Keshav Batra",
+                        spans=[
+                            ft.TextSpan("KESHAV AI • Developed by "),
+                            ft.TextSpan(
+                                "Keshav Batra",
+                                url="https://github.com/keshavbatra2003",
+                                style=ft.TextStyle(
+                                    decoration=ft.TextDecoration.UNDERLINE,
+                                    color=self.theme["text_primary"],
+                                ),
+                            ),
+                        ],
                         size=12.5,
                         color=self.theme["text_muted"],
                         text_align=ft.TextAlign.CENTER,

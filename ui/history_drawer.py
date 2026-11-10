@@ -147,39 +147,60 @@ class HistorySidebar(ft.Container):
             padding=ft.Padding(8, 8, 8, 8),
             border_radius=12,
             border=ft.Border(top=ft.BorderSide(1, self.theme["border"])),
-            on_click=lambda _: self.on_open_settings(),
             content=ft.Row(
                 alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                vertical_alignment=ft.CrossAxisAlignment.CENTER,
                 controls=[
-                    ft.Row(
-                        spacing=9,
-                        vertical_alignment=ft.CrossAxisAlignment.CENTER,
-                        controls=[
-                            ft.Container(
-                                width=32,
-                                height=32,
-                                border_radius=16,
-                                clip_behavior=ft.ClipBehavior.ANTI_ALIAS,
-                                border=ft.Border.all(1, "#383838" if self.is_dark else "#CCCCCC"),
-                                bgcolor="#000000",
-                                content=ft.Image(
-                                    src="/logo.png",
+                    ft.Container(
+                        expand=True,
+                        url="https://github.com/keshavbatra2003",
+                        tooltip="View Keshav Batra on GitHub (github.com/keshavbatra2003)",
+                        ink=True,
+                        border_radius=8,
+                        padding=ft.Padding(4, 4, 4, 4),
+                        content=ft.Row(
+                            spacing=9,
+                            vertical_alignment=ft.CrossAxisAlignment.CENTER,
+                            controls=[
+                                ft.Container(
                                     width=32,
                                     height=32,
-                                    fit=ft.BoxFit.COVER,
+                                    border_radius=16,
+                                    clip_behavior=ft.ClipBehavior.ANTI_ALIAS,
+                                    border=ft.Border.all(1, "#383838" if self.is_dark else "#CCCCCC"),
+                                    bgcolor="#000000",
+                                    content=ft.Image(
+                                        src="/logo.png",
+                                        width=32,
+                                        height=32,
+                                        fit=ft.BoxFit.COVER,
+                                    ),
                                 ),
-                            ),
-                            ft.Column(
-                                spacing=1,
-                                tight=True,
-                                controls=[
-                                    ft.Text("Keshav Batra", size=13, weight=ft.FontWeight.W_600, color=self.theme["text_primary"]),
-                                    ft.Text("Developer", size=11, color=self.theme["text_muted"]),
-                                ],
-                            ),
-                        ],
+                                ft.Column(
+                                    spacing=1,
+                                    tight=True,
+                                    controls=[
+                                        ft.Row(
+                                            spacing=4,
+                                            vertical_alignment=ft.CrossAxisAlignment.CENTER,
+                                            controls=[
+                                                ft.Text("Keshav Batra", size=13, weight=ft.FontWeight.W_600, color=self.theme["text_primary"]),
+                                                ft.Icon(ft.Icons.OPEN_IN_NEW_ROUNDED, size=11, color=self.theme["text_muted"]),
+                                            ],
+                                        ),
+                                        ft.Text("Developer • GitHub", size=11, color=self.theme["text_muted"]),
+                                    ],
+                                ),
+                            ],
+                        ),
                     ),
-                    ft.Icon(ft.Icons.SETTINGS_OUTLINED, size=18, color=self.theme["text_muted"]),
+                    ft.IconButton(
+                        icon=ft.Icons.SETTINGS_OUTLINED,
+                        icon_size=18,
+                        icon_color=self.theme["text_muted"],
+                        tooltip="Settings",
+                        on_click=lambda _: self.on_open_settings(),
+                    ),
                 ],
             ),
         )
