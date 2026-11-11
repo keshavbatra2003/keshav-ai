@@ -106,12 +106,10 @@ def main(page: ft.Page):
         )
         welcome_msg = (
             "🌿 **Welcome to your Safe Space.**\n\n"
-            "Life can get overwhelming, noisy, and heavy at times. Whatever is on your mind or heart right now — "
-            "stress from work or studies, personal decisions, relationship friction, anxiety, or heavy feelings — "
-            "you can share it completely openly here without any judgment.\n\n"
-            "I'm here to listen, help you take a slow, calm breath, and provide **grounded, objective, and practical guidance** "
-            "so you feel relieved, relaxed, and clear-headed.\n\n"
-            "Take your time. What is on your mind or heart today?"
+            "Take a gentle breath and let your shoulders drop. Whatever is weighing on you right now — "
+            "stress, anxiety, a heavy feeling, or a difficult dilemma — you can share it here freely.\n\n"
+            "I'm here to give you **short, clear, and practical clarity** so you feel immediate relief and peace.\n\n"
+            "What's on your heart today?"
         )
         database.add_message(new_id, "assistant", welcome_msg)
         current_session_id = new_id

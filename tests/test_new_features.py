@@ -110,8 +110,10 @@ class TestNewFeatures(unittest.TestCase):
             database.MINDFUL_ADVISOR_SYSTEM_PROMPT,
         )
         self.assertIn("safe space", reply.lower())
-        self.assertIn("Grounded, Logical Perspective", reply)
-        self.assertIn("Practical Steps", reply)
+        self.assertIn("Logical Clarity", reply)
+        self.assertIn("Simple Steps", reply)
+        # Ensure it is small, precise, and compact (under 160 words)
+        self.assertLess(len(reply.split()), 160)
 
         # When user shares emotional distress / feelings
         reply_feelings = ai_service.MockAIEngine.generate_reply(
@@ -119,7 +121,8 @@ class TestNewFeatures(unittest.TestCase):
             database.DEFAULT_SYSTEM_PROMPT,
         )
         self.assertIn("safe space", reply_feelings.lower())
-        self.assertIn("Circle of Control", reply_feelings)
+        self.assertIn("control", reply_feelings.lower())
+        self.assertLess(len(reply_feelings.split()), 160)
 
 
 if __name__ == "__main__":

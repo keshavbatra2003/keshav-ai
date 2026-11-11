@@ -1320,8 +1320,9 @@ class ChatView(ft.Container):
         ]) and not is_mindful:
             mindful_augment = (
                 "\n\n[USER EMOTIONAL CONTEXT: The user is sharing personal feelings, distress, or life problems. "
-                "Respond with deep empathy and warmth, validate their experience, untangle the problem logically, "
-                "provide 2-3 calm, practical, bite-sized steps they can take today, and close with a reassuring, relaxing message.]"
+                "CRITICAL: Keep your response SHORT, PRECISE, and deeply impactful (around 70-110 words total). "
+                "Do NOT write long essays. Give 1 sentence of warm grounding, 1-2 crisp sentences of logical clarity/control, "
+                "2 micro-steps to reset, and 1 powerful reassuring closing thought that leaves them feeling relaxed.]"
             )
             settings["system_prompt"] = (settings.get("system_prompt", "") + mindful_augment)
 
