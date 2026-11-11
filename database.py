@@ -36,8 +36,8 @@ MINDFUL_ADVISOR_SYSTEM_PROMPT = (
 
 DEFAULT_SETTINGS = {
     "provider": "gemini",  # "gemini", "openai", "demo"
-    "gemini_api_key": "",
-    "gemini_model": "gemini-2.0-flash-lite",
+    "gemini_api_key": os.environ.get("GEMINI_API_KEY", ""),
+    "gemini_model": "gemini-3.5-flash-lite",
     "openai_api_key": "",
     "openai_base_url": "https://api.openai.com/v1",
     "openai_model": "gpt-4o",
@@ -123,6 +123,18 @@ def get_all_settings() -> Dict[str, str]:
         env_gemini_key = os.environ.get("GEMINI_API_KEY", "").strip()
         if env_gemini_key and not settings.get("gemini_api_key", "").strip():
             settings["gemini_api_key"] = env_gemini_key
+
+        # Ensure active working Gemini model
+        if settings.get("gemini_model") in ("gemini-2.0-flash-lite", "gemini-2.0-flash", "gemini-1.5-flash", ""):
+            settings["gemini_model"] = "gemini-3.5-flash-lite"
+            cursor.execute("UPDATE settings SET value = 'gemini-3.5-flash-lite' WHERE key = 'gemini_model'")
+            conn.commit()
+
+        # If gemini_api_key is available via environment, sync it to settings
+        if env_gemini_key and not settings.get("gemini_api_key", "").strip():
+            settings["gemini_api_key"] = env_gemini_key
+            cursor.execute("UPDATE settings SET value = ? WHERE key = 'gemini_api_key'", (env_gemini_key,))
+            conn.commit()
 
         # Ensure creator instructions are always present in the system prompt
         current_sp = settings.get("system_prompt", "")

@@ -220,20 +220,45 @@ class MockAIEngine:
             "depressed", "depression", "sad", "sadness", "cry", "crying", "breakup", "break up",
             "broken heart", "lonely", "alone", "burnout", "burnt out", "tired of", "exhausted",
             "problem", "problems", "relationship", "panic", "worry", "worried", "scared", "fear",
-            "relax", "calm", "advice", "decision", "guilt", "hurt", "hopeless", "lost"
+            "relax", "calm", "advice", "decision", "guilt", "hurt", "hopeless", "lost", "fail", "failed"
         ])
         if is_mindful or has_feelings:
+            if any(w in last_msg for w in ["exam", "study", "studies", "test", "grade", "college", "school"]):
+                topic = "your exams and academic performance"
+                logic = "Exams test your preparation on one single day, not your intelligence or life's worth. Panicking divides your focus."
+                s1 = "Step away from all revision notes for 15 minutes to let your working memory settle."
+                s2 = "Review only the single highest-yield topic next, then prioritize a solid night of rest."
+            elif any(w in last_msg for w in ["friend", "relationship", "boyfriend", "girlfriend", "partner", "fight", "argued", "argument", "breakup", "broken"]):
+                topic = "this conflict and emotional friction"
+                logic = "Emotional adrenaline magnifies every word into an attack. Giving the moment space allows both sides to shift from defense to understanding."
+                s1 = "Wait for the initial sting to cool before drafting long text messages or explanations."
+                s2 = "Reach out with a low-pressure note focused on listening rather than proving who was right."
+            elif any(w in last_msg for w in ["work", "job", "boss", "career", "interview", "office"]):
+                topic = "workplace stress and career pressure"
+                logic = "A career is a marathon, not a sprint. You are only responsible for doing your best with today's immediate priorities."
+                s1 = "Isolate your #1 most important task today and explicitly push non-urgent items to tomorrow."
+                s2 = "Establish a clear cutoff hour this evening to let your mind completely disconnect."
+            elif any(w in last_msg for w in ["tired", "exhausted", "sleep", "cant sleep", "burnout", "burnt out"]):
+                topic = "this physical and mental exhaustion"
+                logic = "Exhaustion is your nervous system signaling for recovery, not a sign of weakness or failure."
+                s1 = "Disconnect from all screens and dim the ambient lighting in your space."
+                s2 = "Give yourself unconditional permission to do only what is strictly necessary today."
+            else:
+                topic = "what is weighing on your mind right now"
+                logic = "When anxiety spikes, our mind treats every fear as an immediate emergency. In reality, most of what is stressing you is outside your direct control today and cannot be solved in this single minute."
+                s1 = "Drop your shoulders, unclench your jaw, and take three slow, deep exhales."
+                s2 = "Focus only on your single next doable action right in front of you."
+
             return (
-                "🌿 **Take a gentle breath. You're in a safe space.**\n\n"
-                "Whatever is weighing on you right now is completely valid, but remember: "
-                "**you don't have to carry the whole future today — only your very next step.**\n\n"
-                "💡 **Logical Clarity:**\n"
-                "Your mind is feeling overwhelmed because it's treating everything as an immediate emergency. "
-                "In reality, most of what is stressing you right now is outside your control today. Focus only on what you can directly touch right now.\n\n"
-                "🛠️ **2 Simple Steps:**\n"
-                "• **Breathe & Reset:** Drop your shoulders, unclench your jaw, and take three slow, deep exhales.\n"
-                "• **The 1-Task Rule:** Pick just *one* small, tangible thing to do right now, and give yourself full permission to ignore the rest for today.\n\n"
-                "🕊️ *This heavy moment is temporary. You've navigated hard days before, and you will get through this one with peace.*"
+                f"🌿 **Take a gentle breath. You're in a safe space.**\n\n"
+                f"Feeling weighed down by {topic} is completely valid, but remember: "
+                f"**you don't have to carry the whole future today — only your very next step.**\n\n"
+                f"💡 **Logical Clarity:**\n"
+                f"{logic}\n\n"
+                f"🛠️ **2 Simple Steps:**\n"
+                f"• {s1}\n"
+                f"• {s2}\n\n"
+                f"🕊️ *This heavy moment is temporary. You've navigated hard days before, and you will get through this one with peace.*"
             )
 
         # Coding requests
@@ -353,30 +378,20 @@ async def stream_gemini_api(
     messages: List[Dict[str, Any]],
     system_prompt: str,
     api_key: str,
-    model: str = "gemini-2.0-flash-lite",
+    model: str = "gemini-3.5-flash-lite",
 ) -> AsyncGenerator[str, None]:
     """Streams responses from Google Gemini API via streamGenerateContent SSE with automatic high-demand failover."""
     if not api_key:
         raise ValueError("Google Gemini API key is missing. Please add it in Settings.")
 
-    # Sanitize model name — map legacy/fictional names to real Google models
-    legacy_map = {
-        "gemini-3.5-flash-lite": "gemini-2.0-flash-lite",
-        "gemini-3.5-flash": "gemini-2.0-flash",
-        "gemini-3.6-flash": "gemini-2.0-flash",
-        "gemini-3.1-pro-preview": "gemini-2.5-pro-preview-05-06",
-        "gemini-flash-latest": "gemini-2.0-flash",
-    }
-    if not model:
-        model = "gemini-2.0-flash-lite"
-    elif model in legacy_map:
-        model = legacy_map[model]
-    elif model.startswith("gemini-1.5"):
-        model = "gemini-2.0-flash"
+    # Active Google Gemini models in 2026: gemini-3.5-flash-lite, gemini-3.5-flash
+    active_models = ["gemini-3.5-flash-lite", "gemini-3.5-flash"]
+    if not model or model not in active_models:
+        model = "gemini-3.5-flash-lite"
 
-    # Multi-model resilience chain: if a model encounters a 503 high-demand spike, auto-switch
+    # Multi-model resilience chain: auto-switch to companion model if needed
     models_to_try = [model]
-    for fallback in ["gemini-2.0-flash-lite", "gemini-2.0-flash", "gemini-1.5-flash"]:
+    for fallback in active_models:
         if fallback not in models_to_try:
             models_to_try.append(fallback)
 

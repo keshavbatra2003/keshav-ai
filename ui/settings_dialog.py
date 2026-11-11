@@ -109,29 +109,16 @@ class SettingsDialog:
             helper="Current API key is securely managed on server and hidden from visitors.",
         )
 
-        current_gemini_model = self.settings.get("gemini_model", "gemini-2.0-flash-lite")
-        # Map legacy/fictional model names to real ones
-        legacy_map = {
-            "gemini-3.5-flash-lite": "gemini-2.0-flash-lite",
-            "gemini-3.5-flash": "gemini-2.0-flash",
-            "gemini-3.6-flash": "gemini-2.0-flash",
-            "gemini-3.1-pro-preview": "gemini-2.5-pro-preview-05-06",
-            "gemini-flash-latest": "gemini-2.0-flash",
-        }
-        if current_gemini_model in legacy_map:
-            current_gemini_model = legacy_map[current_gemini_model]
-        elif current_gemini_model.startswith("gemini-1.5"):
-            current_gemini_model = "gemini-2.0-flash"
+        current_gemini_model = self.settings.get("gemini_model", "gemini-3.5-flash-lite")
+        if not current_gemini_model or current_gemini_model in ("gemini-2.0-flash-lite", "gemini-2.0-flash", "gemini-1.5-flash", "gemini-2.5-flash"):
+            current_gemini_model = "gemini-3.5-flash-lite"
 
         self.gemini_model_dropdown = ft.Dropdown(
             label="Gemini Model",
             value=current_gemini_model,
             options=[
-                ft.dropdown.Option("gemini-2.0-flash-lite", "Gemini 2.0 Flash Lite (Ultra-Fast & High Reliability)"),
-                ft.dropdown.Option("gemini-2.0-flash", "Gemini 2.0 Flash (Standard)"),
-                ft.dropdown.Option("gemini-2.5-flash", "Gemini 2.5 Flash (Latest Fast)"),
-                ft.dropdown.Option("gemini-2.5-pro-preview-05-06", "Gemini 2.5 Pro (Deep Reasoning)"),
-                ft.dropdown.Option("gemini-1.5-flash", "Gemini 1.5 Flash (Legacy)"),
+                ft.dropdown.Option("gemini-3.5-flash-lite", "Gemini 3.5 Flash Lite (Ultra-Fast & Smart)"),
+                ft.dropdown.Option("gemini-3.5-flash", "Gemini 3.5 Flash (Comprehensive & Creative)"),
             ],
             dense=True,
             border_radius=10,
