@@ -213,6 +213,35 @@ class MockAIEngine:
             url = get_flux_image_url(prompt)
             return format_image_markdown(prompt, url)
 
+        # Personal problems, feelings, anxiety, stress, or mindful advisor session
+        is_mindful = "mindful advisor" in system_prompt.lower() or "safe space" in system_prompt.lower()
+        has_feelings = any(w in last_msg for w in [
+            "feel", "feeling", "feelings", "stress", "stressed", "overwhelm", "anxious", "anxiety",
+            "depressed", "depression", "sad", "sadness", "cry", "crying", "breakup", "break up",
+            "broken heart", "lonely", "alone", "burnout", "burnt out", "tired of", "exhausted",
+            "problem", "problems", "relationship", "panic", "worry", "worried", "scared", "fear",
+            "relax", "calm", "advice", "decision", "guilt", "hurt", "hopeless", "lost"
+        ])
+        if is_mindful or has_feelings:
+            return (
+                "🌿 **Take a gentle, slow breath. You are in a safe space.**\n\n"
+                "First, whatever is weighing on your mind right now is completely valid. "
+                "It is okay to feel exhausted, uncertain, or hurt — you do not need to carry the whole world on your shoulders today, "
+                "and you don't have to solve everything all at once. Let's untangle this with calm logic and gentle clarity.\n\n"
+                "### 💡 A Grounded, Logical Perspective\n"
+                "1. **Untangle Emotion from Fact:** When feelings are running high, our mind often paints worst-case scenarios that aren't actually true today. "
+                "Pause for a moment and look at just what is right in front of you.\n"
+                "2. **The Circle of Control:** Separate this into two distinct buckets:\n"
+                "   - *Outside your control:* Other people's thoughts, reactions, or past mistakes.\n"
+                "   - *Inside your control:* How you breathe right now, how you speak to yourself today, and your very next step.\n"
+                "   Give yourself full permission to let go of what is outside your hands.\n\n"
+                "### 🛠️ 3 Practical Steps for Today\n"
+                "- **Step 1 (Physical Reset):** Step away for 3 minutes. Drink a cool glass of water, unclench your jaw, and let your shoulders drop.\n"
+                "- **Step 2 (The 1-Action Rule):** Choose just ONE tiny, manageable action that will make you feel 5% lighter or more organized. Don't worry about tomorrow yet.\n"
+                "- **Step 3 (Let It Out):** If you need to vent more details or weigh a difficult choice, tell me more. I'm here to listen and help you think through it clearly.\n\n"
+                "🕊️ *You have survived 100% of your hardest days so far, and you will navigate this one with grace too. You are stronger than you think.*"
+            )
+
         # Coding requests
         if any(w in last_msg for w in ["python", "code", "function", "flutter", "flet", "react", "bug", "algorithm"]):
             return (

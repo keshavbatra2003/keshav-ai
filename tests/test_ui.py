@@ -49,6 +49,7 @@ class TestUIComponents(unittest.TestCase):
 
     def test_sidebar_creation(self):
         session_id = database.get_or_create_initial_session()
+        mindful_clicked = []
         sidebar = HistorySidebar(
             current_session_id=session_id,
             is_dark=True,
@@ -56,9 +57,12 @@ class TestUIComponents(unittest.TestCase):
             on_new_chat=lambda: None,
             on_delete_session=lambda sid: None,
             on_open_settings=lambda: None,
+            on_new_mindful_chat=lambda: mindful_clicked.append(True),
         )
         self.assertIsInstance(sidebar, ft.Container)
         self.assertTrue(len(sidebar.session_list_view.controls) > 0)
+        sidebar.on_new_mindful_chat()
+        self.assertTrue(mindful_clicked[0])
 
     def test_settings_dialog_instantiation(self):
         from ui.settings_dialog import SettingsDialog

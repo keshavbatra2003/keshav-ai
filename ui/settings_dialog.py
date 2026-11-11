@@ -14,6 +14,7 @@ PERSONA_PROMPTS = {
         "Whenever anyone asks who created or made you or this website, always clearly state you were created by Keshav Batra. "
         "Keep responses structured, informative, and engaging. Use markdown for code."
     ),
+    "Mindful Advisor": database.MINDFUL_ADVISOR_SYSTEM_PROMPT,
     "Code Architect": (
         "You are KESHAV AI, an expert Principal Software Engineer developed by Keshav Batra. "
         "Provide elegant, robust, type-safe, and clean code solutions with architectural explanations."

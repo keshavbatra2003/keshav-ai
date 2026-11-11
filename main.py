@@ -97,6 +97,33 @@ def main(page: ft.Page):
             except Exception:
                 pass
 
+    def on_new_mindful_chat():
+        nonlocal current_session_id
+        new_id = database.create_session(
+            title="🌿 Safe Space",
+            system_prompt=database.MINDFUL_ADVISOR_SYSTEM_PROMPT,
+            client_id=client_id,
+        )
+        welcome_msg = (
+            "🌿 **Welcome to your Safe Space.**\n\n"
+            "Life can get overwhelming, noisy, and heavy at times. Whatever is on your mind or heart right now — "
+            "stress from work or studies, personal decisions, relationship friction, anxiety, or heavy feelings — "
+            "you can share it completely openly here without any judgment.\n\n"
+            "I'm here to listen, help you take a slow, calm breath, and provide **grounded, objective, and practical guidance** "
+            "so you feel relieved, relaxed, and clear-headed.\n\n"
+            "Take your time. What is on your mind or heart today?"
+        )
+        database.add_message(new_id, "assistant", welcome_msg)
+        current_session_id = new_id
+        desktop_sidebar.set_current_session(new_id)
+        mobile_sidebar.set_current_session(new_id)
+        chat_view.load_session(new_id)
+        if is_mobile:
+            try:
+                page.run_task(page.close_drawer)
+            except Exception:
+                pass
+
     def on_delete_session(session_id: str):
         nonlocal current_session_id
 
@@ -171,6 +198,7 @@ def main(page: ft.Page):
         on_new_chat=on_new_chat,
         on_delete_session=on_delete_session,
         on_open_settings=on_open_settings,
+        on_new_mindful_chat=on_new_mindful_chat,
         client_id=client_id,
         width=290,
     )
@@ -184,6 +212,7 @@ def main(page: ft.Page):
         on_new_chat=on_new_chat,
         on_delete_session=on_delete_session,
         on_open_settings=on_open_settings,
+        on_new_mindful_chat=on_new_mindful_chat,
         client_id=client_id,
         width=300,
     )

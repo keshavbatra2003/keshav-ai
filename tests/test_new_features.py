@@ -85,6 +85,42 @@ class TestNewFeatures(unittest.TestCase):
         reader = pypdf.PdfReader(stream)
         self.assertEqual(len(reader.pages), 1)
 
+    def test_mindful_advisor_system_prompt_and_session(self):
+        self.assertIn("Mindful Advisor", database.MINDFUL_ADVISOR_SYSTEM_PROMPT)
+        self.assertIn("Keshav Batra", database.MINDFUL_ADVISOR_SYSTEM_PROMPT)
+
+        sess_id = database.create_session(
+            title="🌿 Safe Space",
+            system_prompt=database.MINDFUL_ADVISOR_SYSTEM_PROMPT,
+        )
+        sess = database.get_session(sess_id)
+        self.assertIsNotNone(sess)
+        self.assertEqual(sess["title"], "🌿 Safe Space")
+        self.assertIn("Mindful Advisor", sess["system_prompt"])
+
+        # Test updating session system prompt
+        database.update_session_system_prompt(sess_id, "Updated prompt")
+        updated_sess = database.get_session(sess_id)
+        self.assertEqual(updated_sess["system_prompt"], "Updated prompt")
+
+    def test_mindful_advisor_mock_engine_response(self):
+        # When system prompt is mindful advisor
+        reply = ai_service.MockAIEngine.generate_reply(
+            [{"role": "user", "content": "I am struggling with life decisions and stress"}],
+            database.MINDFUL_ADVISOR_SYSTEM_PROMPT,
+        )
+        self.assertIn("safe space", reply.lower())
+        self.assertIn("Grounded, Logical Perspective", reply)
+        self.assertIn("Practical Steps", reply)
+
+        # When user shares emotional distress / feelings
+        reply_feelings = ai_service.MockAIEngine.generate_reply(
+            [{"role": "user", "content": "I feel so overwhelmed and anxious today"}],
+            database.DEFAULT_SYSTEM_PROMPT,
+        )
+        self.assertIn("safe space", reply_feelings.lower())
+        self.assertIn("Circle of Control", reply_feelings)
+
 
 if __name__ == "__main__":
     unittest.main()

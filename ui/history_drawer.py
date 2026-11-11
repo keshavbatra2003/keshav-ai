@@ -18,6 +18,7 @@ class HistorySidebar(ft.Container):
         on_new_chat: Callable[[], None],
         on_delete_session: Callable[[str], None],
         on_open_settings: Callable[[], None],
+        on_new_mindful_chat: Optional[Callable[[], None]] = None,
         client_id: Optional[str] = None,
         width: int = 280,
     ):
@@ -26,6 +27,7 @@ class HistorySidebar(ft.Container):
         self.is_dark = is_dark
         self.on_select_session = on_select_session
         self.on_new_chat = on_new_chat
+        self.on_new_mindful_chat = on_new_mindful_chat or on_new_chat
         self.on_delete_session = on_delete_session
         self.on_open_settings = on_open_settings
         self.client_id = client_id
@@ -77,6 +79,7 @@ class HistorySidebar(ft.Container):
         self.search_input.bgcolor = self.theme["input_bg"]
         self.search_input.color = self.theme["text_primary"]
         self.search_input.hint_style = ft.TextStyle(size=12.5, color=self.theme["text_muted"])
+        self._build_layout()
         self.refresh_sessions()
 
     def _build_layout(self):
@@ -138,6 +141,58 @@ class HistorySidebar(ft.Container):
                         ],
                     ),
                     ft.Icon(ft.Icons.EDIT_OUTLINED, size=15, color=self.theme["text_muted"]),
+                ],
+            ),
+        )
+
+        # Mindful Advisor / Safe Space Button (Placed directly below New Chat)
+        mindful_advisor_btn = ft.Container(
+            on_click=lambda _: self.on_new_mindful_chat(),
+            padding=ft.Padding(12, 9, 12, 9),
+            border_radius=10,
+            bgcolor="#064E3B" if self.is_dark else "#ECFDF5",
+            border=ft.Border.all(1, "#10B981" if self.is_dark else "#A7F3D0"),
+            tooltip="Safe Space: Share personal problems & feelings for calm, practical advice",
+            ink=True,
+            content=ft.Row(
+                alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                vertical_alignment=ft.CrossAxisAlignment.CENTER,
+                controls=[
+                    ft.Row(
+                        spacing=8,
+                        vertical_alignment=ft.CrossAxisAlignment.CENTER,
+                        controls=[
+                            ft.Icon(ft.Icons.SPA_ROUNDED, size=16, color="#34D399" if self.is_dark else "#059669"),
+                            ft.Column(
+                                spacing=1,
+                                tight=True,
+                                controls=[
+                                    ft.Text(
+                                        "Mindful Advisor",
+                                        size=13,
+                                        weight=ft.FontWeight.W_600,
+                                        color=self.theme["text_primary"],
+                                    ),
+                                    ft.Text(
+                                        "Calm, practical advice",
+                                        size=10.5,
+                                        color="#6EE7B7" if self.is_dark else "#059669",
+                                    ),
+                                ],
+                            ),
+                        ],
+                    ),
+                    ft.Container(
+                        padding=ft.Padding(6, 2, 6, 2),
+                        border_radius=8,
+                        bgcolor="#047857" if self.is_dark else "#10B981",
+                        content=ft.Text(
+                            "Calm",
+                            size=9.5,
+                            weight=ft.FontWeight.BOLD,
+                            color="#FFFFFF",
+                        ),
+                    ),
                 ],
             ),
         )
@@ -207,10 +262,11 @@ class HistorySidebar(ft.Container):
 
         self.content = ft.Column(
             expand=True,
-            spacing=12,
+            spacing=10,
             controls=[
                 brand_row,
                 new_chat_btn,
+                mindful_advisor_btn,
                 self.search_input,
                 ft.Text(
                     "CHATS",
@@ -260,6 +316,8 @@ class HistorySidebar(ft.Container):
                 updated_at = s.get("updated_at", "")
                 date_part = updated_at.split("T")[0] if "T" in updated_at else ""
 
+                is_mindful_session = s["title"].startswith("🌿") or "mindful" in s["title"].lower()
+
                 item_container = ft.Container(
                     padding=ft.Padding(10, 8, 8, 8),
                     border_radius=10,
@@ -279,9 +337,13 @@ class HistorySidebar(ft.Container):
                                 expand=True,
                                 controls=[
                                     ft.Icon(
-                                        ft.Icons.CHAT_BUBBLE_OUTLINE_ROUNDED if not is_active else ft.Icons.CHAT_BUBBLE_ROUNDED,
+                                        ft.Icons.SPA_ROUNDED if is_mindful_session else (
+                                            ft.Icons.CHAT_BUBBLE_OUTLINE_ROUNDED if not is_active else ft.Icons.CHAT_BUBBLE_ROUNDED
+                                        ),
                                         size=16,
-                                        color=self.theme["primary"] if is_active else self.theme["text_secondary"],
+                                        color="#10B981" if is_mindful_session else (
+                                            self.theme["primary"] if is_active else self.theme["text_secondary"]
+                                        ),
                                     ),
                                     ft.Column(
                                         spacing=2,

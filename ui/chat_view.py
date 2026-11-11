@@ -918,11 +918,21 @@ class ChatView(ft.Container):
             self.messages_list.controls.append(self._build_empty_state())
         else:
             settings = database.get_all_settings()
+            session_info = database.get_session(self.session_id)
+            is_mindful = False
+            if session_info:
+                if session_info.get("title", "").startswith("🌿") or (
+                    session_info.get("system_prompt") and "Mindful Advisor" in session_info["system_prompt"]
+                ):
+                    is_mindful = True
+
             prov = settings.get("provider", "demo")
             model_tag = "Demo"
-            if prov == "gemini":
+            if is_mindful:
+                model_tag = "🌿 Mindful Advisor"
+            elif prov == "gemini":
                 model_tag = settings.get("gemini_model", "gemini-2.0-flash-lite")
-            elif prov == "openai":
+            elif prov in ("openai", "chatgpt"):
                 model_tag = settings.get("openai_model", "gpt-4o-mini")
 
             for msg in messages:
@@ -955,6 +965,7 @@ class ChatView(ft.Container):
     def _build_empty_state(self) -> ft.Control:
         prompt_cards = [
             ("🎬 Create Video", "Cinematic trailer & storyboard", "/video cinematic cybernetic sports car racing in neon Tokyo rain in 4K HDR"),
+            ("🌿 Safe Space", "Calm advice for personal problems", "I feel overwhelmed with everything on my plate right now. Can you help me untangle my thoughts and find calm?"),
             ("🌐 Live Web Search", "Real-time AI news & facts", "/search latest artificial intelligence breakthroughs and news in 2026"),
             ("🎨 Generate Image", "Glowing cyber-mandala in 8K", "/image futuristic glowing cyber-mandala emblem with KB initials in 8k photorealistic metallic chrome"),
             ("💻 Code Python", "High-performance cache with TTL", "Write a clean, production-ready Python in-memory cache decorator with TTL and thread safety."),
@@ -1290,10 +1301,36 @@ class ChatView(ft.Container):
             return
 
         prov = settings.get("provider", "demo")
+        session_info = database.get_session(self.session_id)
+        is_mindful = False
+        if session_info:
+            if session_info.get("title", "").startswith("🌿") or (
+                session_info.get("system_prompt") and "Mindful Advisor" in session_info["system_prompt"]
+            ):
+                is_mindful = True
+            if session_info.get("system_prompt"):
+                settings["system_prompt"] = session_info["system_prompt"]
+
+        # If user expresses personal stress or feelings in a general chat, augment system prompt
+        if any(w in last_user_msg.lower() for w in [
+            "overwhelmed", "anxious", "anxiety", "stress", "stressed", "depressed", "depression",
+            "sad", "feeling down", "feel down", "relationship problem", "breakup", "break up",
+            "personal problem", "my feelings", "cant sleep", "can't sleep", "lonely", "panic",
+            "burnout", "burnt out", "feel like giving up", "hopeless", "heartbroken"
+        ]) and not is_mindful:
+            mindful_augment = (
+                "\n\n[USER EMOTIONAL CONTEXT: The user is sharing personal feelings, distress, or life problems. "
+                "Respond with deep empathy and warmth, validate their experience, untangle the problem logically, "
+                "provide 2-3 calm, practical, bite-sized steps they can take today, and close with a reassuring, relaxing message.]"
+            )
+            settings["system_prompt"] = (settings.get("system_prompt", "") + mindful_augment)
+
         model_tag = "Demo"
-        if prov == "gemini":
+        if is_mindful:
+            model_tag = "🌿 Mindful Advisor"
+        elif prov == "gemini":
             model_tag = settings.get("gemini_model", "gemini-2.0-flash-lite")
-            if not settings.get("gemini_api_key", "").strip():
+            if not settings.get("gemini_api_key", "").strip() and not is_mindful:
                 full_text = (
                     "⚠️ **Google Gemini API Key Needed to Go Online**\n\n"
                     "To connect KESHAV AI online using Google Gemini:\n\n"
